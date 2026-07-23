@@ -6,3 +6,60 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      String
+  createdAt DateTime @default(now())
+
+  maintenanceRequests MaintenanceRequest[]
+  maintenanceRecords  MaintenanceRecord[]  @relation("TechnicianRecords")
+}
+
+model Asset {
+  id           Int      @id @default(autoincrement())
+  assetName    String
+  category     String
+  description  String?
+  location     String
+  purchaseDate DateTime
+  status       String
+  createdAt    DateTime @default(now())
+
+  maintenanceRequests MaintenanceRequest[]
+}
+
+model MaintenanceRequest {
+  id          Int      @id @default(autoincrement())
+  description String
+  priority    String
+  status      String
+  requestDate DateTime
+  createdAt   DateTime @default(now())
+
+  userId Int
+  user   User  @relation(fields: [userId], references: [id])
+
+  assetId Int
+  asset   Asset @relation(fields: [assetId], references: [id])
+
+  maintenanceRecord MaintenanceRecord?
+}
+
+model MaintenanceRecord {
+  id                Int      @id @default(autoincrement())
+  repairDescription String
+  repairDate        DateTime
+  cost              Decimal  @db.Decimal(10, 2)
+  notes             String?
+  createdAt         DateTime @default(now())
+
+  requestId Int                 @unique
+  request   MaintenanceRequest  @relation(fields: [requestId], references: [id])
+
+  technicianId Int
+  technician   User @relation("TechnicianRecords", fields: [technicianId], references: [id])
+}
