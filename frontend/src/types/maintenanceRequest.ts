@@ -1,12 +1,12 @@
 export type RequestPriority = 'Critical' | 'High' | 'Medium' | 'Low';
 
 export type RequestStatus =
-  | 'Pending'
+  | 'Unassigned'
   | 'Assigned'
   | 'In Progress'
   | 'Completed';
 
-export type StatusTab = 'all' | 'unassigned' | Exclude<RequestStatus, 'Completed'>;
+export type StatusTab = 'all' | 'unassigned' | 'Assigned' | 'In Progress';
 
 export interface MaintenanceRequest {
   id: string;

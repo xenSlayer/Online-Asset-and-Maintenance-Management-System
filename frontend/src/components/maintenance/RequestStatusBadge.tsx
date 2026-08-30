@@ -4,7 +4,7 @@ const statusStyles: Record<
   RequestStatus,
   { badge: string; dot: string }
 > = {
-  Pending: {
+  Unassigned: {
     badge: 'bg-[#FFFBEB] text-[#D97706]',
     dot: 'bg-[#D97706]',
   },

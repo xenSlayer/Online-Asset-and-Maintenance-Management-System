@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { fetchAssets } from '../api/assets';
 import {
-  approveMaintenanceRequest,
   assignMaintenanceRequest,
   completeMaintenanceRequest,
   createMaintenanceRequest,
@@ -32,11 +31,6 @@ function getTabCounts(requests: MaintenanceRequest[]) {
       key: 'unassigned' as const,
       label: 'Unassigned',
       count: requests.filter(isUnassigned).length,
-    },
-    {
-      key: 'Pending' as const,
-      label: 'Pending',
-      count: requests.filter((request) => request.status === 'Pending').length,
     },
     {
       key: 'Assigned' as const,
@@ -169,10 +163,6 @@ export function MaintenanceRequestsPage() {
     }
   };
 
-  const handleApprove = (request: MaintenanceRequest) => {
-    runAction(request.id, () => approveMaintenanceRequest(request.id));
-  };
-
   const handleReject = (request: MaintenanceRequest) => {
     if (!window.confirm(`Reject request ${request.id}?`)) {
       return;
@@ -302,11 +292,19 @@ export function MaintenanceRequestsPage() {
                 </div>
                 <button
                   type="button"
-                  disabled={actionLoadingId !== ''}
+                  disabled={
+                    actionLoadingId !== '' ||
+                    (!selectedTechnicianId &&
+                      !assigningRequest.assignedTechnicianId)
+                  }
                   onClick={handleAssignConfirm}
                   className="btn-primary-gradient rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm disabled:opacity-60"
                 >
-                  {selectedTechnicianId ? 'Save Assignment' : 'Remove Assignment'}
+                  {selectedTechnicianId
+                    ? assigningRequest.assignedTechnician
+                      ? 'Save Assignment'
+                      : 'Assign Technician'
+                    : 'Remove Assignment'}
                 </button>
                 <button
                   type="button"
@@ -407,7 +405,6 @@ export function MaintenanceRequestsPage() {
               requests={filteredRequests}
               currentUser={currentUser}
               actionLoadingId={actionLoadingId}
-              onApprove={handleApprove}
               onReject={handleReject}
               onAssign={handleAssignClick}
               onUpdate={handleUpdate}

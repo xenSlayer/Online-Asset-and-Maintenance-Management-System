@@ -3,7 +3,7 @@ export type TechnicianAvailability = 'Available' | 'On Assignment';
 export interface TechnicianTask {
   id: string;
   assetName: string;
-  status: 'Pending' | 'Assigned' | 'In Progress' | 'Completed';
+  status: 'Unassigned' | 'Assigned' | 'In Progress' | 'Completed';
 }
 
 export interface Technician {

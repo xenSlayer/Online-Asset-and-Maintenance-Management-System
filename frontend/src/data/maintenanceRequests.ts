@@ -8,7 +8,7 @@ export const maintenanceRequests: MaintenanceRequest[] = [
     description: 'Compressor making unusual noise',
     priority: 'High',
     date: '28 Jul 2026',
-    status: 'Pending',
+    status: 'Unassigned',
     submittedBy: 'Bob Nkosi',
   },
   {

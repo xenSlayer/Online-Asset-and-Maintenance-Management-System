@@ -63,20 +63,6 @@ export async function createMaintenanceRequest(
   return parseResponse<MaintenanceRequest>(response);
 }
 
-export async function approveMaintenanceRequest(
-  id: string,
-): Promise<MaintenanceRequest> {
-  const response = await fetch(
-    `/api/maintenance-requests/${encodeURIComponent(id)}/approve`,
-    {
-      method: 'PATCH',
-      headers: authHeaders(),
-    },
-  );
-
-  return parseResponse<MaintenanceRequest>(response);
-}
-
 export async function assignMaintenanceRequest(
   id: string,
   technicianId: string | null,

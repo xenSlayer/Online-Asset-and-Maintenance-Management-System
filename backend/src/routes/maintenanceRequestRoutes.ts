@@ -2,7 +2,6 @@ import { Router } from 'express';
 import {
   deleteRequest,
   getMaintenanceRequests,
-  patchApproveRequest,
   patchAssignRequest,
   patchCompleteRequest,
   patchProgressRequest,
@@ -14,7 +13,6 @@ const router = Router();
 
 router.get('/', authenticate, getMaintenanceRequests);
 router.post('/', authenticate, postMaintenanceRequest);
-router.patch('/:id/approve', authenticate, patchApproveRequest);
 router.patch('/:id/assign', authenticate, patchAssignRequest);
 router.patch('/:id/progress', authenticate, patchProgressRequest);
 router.patch('/:id/complete', authenticate, patchCompleteRequest);

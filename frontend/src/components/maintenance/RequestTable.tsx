@@ -8,17 +8,19 @@ interface RequestTableProps {
   requests: MaintenanceRequest[];
   currentUser: CurrentUser;
   actionLoadingId?: string;
-  onApprove: (request: MaintenanceRequest) => void;
   onReject: (request: MaintenanceRequest) => void;
   onAssign: (request: MaintenanceRequest) => void;
   onUpdate: (request: MaintenanceRequest) => void;
+}
+
+function isUnassigned(request: MaintenanceRequest) {
+  return request.status === 'Unassigned';
 }
 
 export function RequestTable({
   requests,
   currentUser,
   actionLoadingId,
-  onApprove,
   onReject,
   onAssign,
   onUpdate,
@@ -107,15 +109,15 @@ export function RequestTable({
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex flex-wrap gap-1.5">
-                      {isAdmin && request.status === 'Pending' && (
+                      {isAdmin && isUnassigned(request) && (
                         <>
                           <button
                             type="button"
                             disabled={isLoading}
-                            onClick={() => onApprove(request)}
-                            className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 disabled:opacity-60"
+                            onClick={() => onAssign(request)}
+                            className="btn-primary-gradient rounded-lg px-3 py-1.5 text-xs font-medium text-white disabled:opacity-60"
                           >
-                            Approve
+                            Assign
                           </button>
                           <button
                             type="button"
@@ -125,29 +127,32 @@ export function RequestTable({
                           >
                             Reject
                           </button>
-                          <button
-                            type="button"
-                            disabled={isLoading}
-                            onClick={() => onAssign(request)}
-                            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-60"
-                          >
-                            Assign
-                          </button>
                         </>
                       )}
 
                       {isAdmin &&
-                        (request.status === 'Assigned' ||
-                          request.status === 'In Progress') && (
+                        request.status === 'Assigned' &&
+                        request.assignedTechnician && (
                           <button
                             type="button"
                             disabled={isLoading}
                             onClick={() => onAssign(request)}
                             className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-60"
                           >
-                            {request.assignedTechnician ? 'Reassign' : 'Assign'}
+                            Reassign
                           </button>
                         )}
+
+                      {isAdmin && request.status === 'In Progress' && (
+                        <button
+                          type="button"
+                          disabled={isLoading}
+                          onClick={() => onAssign(request)}
+                          className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-60"
+                        >
+                          Reassign
+                        </button>
+                      )}
 
                       {isTechnician &&
                         (request.status === 'Assigned' ||

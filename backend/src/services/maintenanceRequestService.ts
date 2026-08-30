@@ -27,6 +27,18 @@ const requestInclude = {
   assignedTechnician: { select: { id: true, name: true } },
 } as const;
 
+function resolveStatus(status: string, assignedTechnicianId: number | null) {
+  if (!assignedTechnicianId) {
+    return 'Unassigned';
+  }
+
+  if (status === 'In Progress') {
+    return 'In Progress';
+  }
+
+  return 'Assigned';
+}
+
 function formatRequest(request: {
   id: number;
   description: string;
@@ -36,7 +48,11 @@ function formatRequest(request: {
   asset: { id: number; assetName: string };
   user: { name: string };
   assignedTechnician: { id: number; name: string } | null;
+  assignedTechnicianId?: number | null;
 }) {
+  const technicianId =
+    request.assignedTechnician?.id ?? request.assignedTechnicianId ?? null;
+
   return {
     id: formatRequestId(request.id),
     assetName: request.asset.assetName,
@@ -45,7 +61,7 @@ function formatRequest(request: {
     priority: request.priority,
     date: formatDisplayDate(request.requestDate),
     isoDate: formatIsoDate(request.requestDate),
-    status: request.status,
+    status: resolveStatus(request.status, technicianId),
     submittedBy: request.user.name,
     assignedTechnician: request.assignedTechnician?.name,
     assignedTechnicianId: request.assignedTechnician
@@ -168,7 +184,7 @@ export async function approveMaintenanceRequest(
 
   const request = await prisma.maintenanceRequest.update({
     where: { id },
-    data: { status: 'Assigned' },
+    data: { status: 'Pending' },
     include: requestInclude,
   });
 
@@ -204,7 +220,7 @@ export async function assignMaintenanceRequest(
       where: { id },
       data: {
         assignedTechnicianId: null,
-        status: existing.status === 'In Progress' ? 'Assigned' : existing.status,
+        status: 'Pending',
       },
       include: requestInclude,
     });
@@ -226,7 +242,8 @@ export async function assignMaintenanceRequest(
     where: { id },
     data: {
       assignedTechnicianId: technicianUserId,
-      status: existing.status === 'Pending' ? 'Assigned' : existing.status,
+      status:
+        existing.status === 'In Progress' ? 'In Progress' : 'Assigned',
     },
     include: requestInclude,
   });
@@ -248,8 +265,15 @@ export async function deleteMaintenanceRequest(id: number, auth: AuthPayload) {
     throw new MaintenanceRequestError('Request not found', 404);
   }
 
-  if (existing.status !== 'Pending') {
-    throw new MaintenanceRequestError('Only pending requests can be rejected', 400);
+  if (existing.assignedTechnicianId) {
+    throw new MaintenanceRequestError(
+      'Only unassigned requests can be rejected',
+      400,
+    );
+  }
+
+  if (existing.status === 'Completed') {
+    throw new MaintenanceRequestError('Completed requests cannot be rejected', 400);
   }
 
   if (existing.maintenanceRecord) {
