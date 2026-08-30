@@ -14,6 +14,7 @@ export interface Technician {
   activeTasks: number;
   email: string;
   phone: string;
+  status: string;
   avatarColor: string;
 }
 

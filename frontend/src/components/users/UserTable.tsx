@@ -7,14 +7,14 @@ interface UserTableProps {
   users: User[];
   totalCount: number;
   onEdit: (user: User) => void;
-  onDeactivate: (user: User) => void;
+  onDelete: (user: User) => void;
 }
 
 export function UserTable({
   users,
   totalCount,
   onEdit,
-  onDeactivate,
+  onDelete,
 }: UserTableProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -86,11 +86,10 @@ export function UserTable({
                     </button>
                     <button
                       type="button"
-                      onClick={() => onDeactivate(user)}
-                      disabled={user.status === 'Inactive'}
-                      className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      onClick={() => onDelete(user)}
+                      className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100"
                     >
-                      Deactivate
+                      Delete
                     </button>
                   </div>
                 </td>

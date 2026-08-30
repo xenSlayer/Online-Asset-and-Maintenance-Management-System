@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   createUser,
-  deactivateUser,
+  deleteUser,
   fetchUsers,
   updateUser,
 } from '../api/users';
@@ -111,12 +111,21 @@ export function UsersPage() {
     }
   };
 
-  const handleDeactivate = async (user: User) => {
+  const handleDelete = async (user: User) => {
+    const confirmed = window.confirm(
+      `Delete ${user.name}? This action cannot be undone.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
     try {
-      await deactivateUser(user.id);
+      await deleteUser(user.id);
       await loadUsers();
+      setError('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to deactivate user');
+      setError(err instanceof Error ? err.message : 'Failed to delete user');
     }
   };
 
@@ -164,7 +173,7 @@ export function UsersPage() {
               users={filteredUsers}
               totalCount={userList.length}
               onEdit={openEditForm}
-              onDeactivate={handleDeactivate}
+              onDelete={handleDelete}
             />
           )}
         </>

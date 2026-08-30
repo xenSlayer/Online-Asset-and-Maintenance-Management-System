@@ -44,3 +44,28 @@ export async function fetchTechnician(id: string): Promise<TechnicianDetail> {
 
   return parseResponse<TechnicianDetail>(response);
 }
+
+export interface UpdateTechnicianInput {
+  name: string;
+  email: string;
+  phone?: string;
+  specialisation: string;
+  status: string;
+  password?: string;
+}
+
+export async function updateTechnician(
+  id: string,
+  input: UpdateTechnicianInput,
+): Promise<TechnicianDetail> {
+  const response = await fetch(`/api/technicians/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: {
+      ...authHeaders(),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(input),
+  });
+
+  return parseResponse<TechnicianDetail>(response);
+}

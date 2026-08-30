@@ -4,6 +4,7 @@ import { TechnicianAvatar } from './TechnicianAvatar';
 
 interface TechnicianProfileCardProps {
   technician: Technician;
+  onEdit: () => void;
 }
 
 const infoTiles = (technician: Technician) => [
@@ -13,7 +14,7 @@ const infoTiles = (technician: Technician) => [
   { emoji: '🔧', label: 'Active Tasks', value: String(technician.activeTasks) },
 ];
 
-export function TechnicianProfileCard({ technician }: TechnicianProfileCardProps) {
+export function TechnicianProfileCard({ technician, onEdit }: TechnicianProfileCardProps) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="mb-5 flex items-start gap-4">
@@ -33,6 +34,7 @@ export function TechnicianProfileCard({ technician }: TechnicianProfileCardProps
         </div>
         <button
           type="button"
+          onClick={onEdit}
           className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50"
         >
           Edit Profile

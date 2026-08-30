@@ -9,6 +9,7 @@ export const technicians: Technician[] = [
     activeTasks: 2,
     email: 'james@assetcore.com',
     phone: '+1 555 0201',
+    status: 'Active',
     avatarColor: '#4F46E5',
   },
   {
@@ -19,6 +20,7 @@ export const technicians: Technician[] = [
     activeTasks: 1,
     email: 'maria@assetcore.com',
     phone: '+1 555 0202',
+    status: 'Active',
     avatarColor: '#DB2777',
   },
   {
@@ -29,6 +31,7 @@ export const technicians: Technician[] = [
     activeTasks: 0,
     email: 'david@assetcore.com',
     phone: '+1 555 0203',
+    status: 'Active',
     avatarColor: '#059669',
   },
   {
@@ -39,6 +42,7 @@ export const technicians: Technician[] = [
     activeTasks: 3,
     email: 'priya@assetcore.com',
     phone: '+1 555 0204',
+    status: 'Active',
     avatarColor: '#7C3AED',
   },
 ];

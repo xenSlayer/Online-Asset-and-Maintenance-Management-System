@@ -70,11 +70,11 @@ export async function updateUser(
   return parseResponse<User>(response);
 }
 
-export async function deactivateUser(id: string): Promise<User> {
-  const response = await fetch(`/api/users/${id}/deactivate`, {
-    method: 'PATCH',
+export async function deleteUser(id: string): Promise<{ id: string }> {
+  const response = await fetch(`/api/users/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
     headers: authHeaders(),
   });
 
-  return parseResponse<User>(response);
+  return parseResponse<{ id: string }>(response);
 }

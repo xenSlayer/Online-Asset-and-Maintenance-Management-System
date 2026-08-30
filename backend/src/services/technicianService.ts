@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs';
 import prisma from '../config/database';
 
 export class TechnicianError extends Error {
@@ -30,6 +31,7 @@ type TechnicianRecord = {
   email: string;
   phone: string | null;
   specialisation: string | null;
+  status: string;
   assignedRequests: { id: number }[];
 };
 
@@ -45,6 +47,7 @@ function formatTechnicianSummary(technician: TechnicianRecord) {
     activeTasks,
     email: technician.email,
     phone: technician.phone ?? '',
+    status: technician.status,
     avatarColor: getAvatarColor(technician.name),
   };
 }
@@ -68,6 +71,7 @@ export async function listTechnicians() {
       email: true,
       phone: true,
       specialisation: true,
+      status: true,
       assignedRequests: technicianInclude.assignedRequests,
     },
   });
@@ -84,6 +88,7 @@ export async function getTechnicianById(id: number) {
       email: true,
       phone: true,
       specialisation: true,
+      status: true,
       assignedRequests: {
         where: {
           status: { in: ACTIVE_STATUSES },
@@ -127,4 +132,70 @@ export function parseTechnicianId(id: string) {
   }
 
   return numericId;
+}
+
+interface UpdateTechnicianInput {
+  name?: string;
+  email?: string;
+  phone?: string;
+  specialisation?: string;
+  status?: string;
+  password?: string;
+}
+
+export async function updateTechnician(id: number, input: UpdateTechnicianInput) {
+  const existing = await prisma.user.findFirst({
+    where: { id, role: 'TECHNICIAN' },
+  });
+
+  if (!existing) {
+    throw new TechnicianError('Technician not found', 404);
+  }
+
+  const email = input.email?.toLowerCase().trim();
+
+  if (email && email !== existing.email) {
+    const duplicate = await prisma.user.findUnique({ where: { email } });
+
+    if (duplicate) {
+      throw new TechnicianError('A user with this email already exists', 409);
+    }
+  }
+
+  const data: {
+    name?: string;
+    email?: string;
+    phone?: string | null;
+    specialisation?: string | null;
+    status?: string;
+    password?: string;
+  } = {};
+
+  if (input.name !== undefined) data.name = input.name.trim();
+  if (email !== undefined) data.email = email;
+  if (input.phone !== undefined) data.phone = input.phone.trim() || null;
+  if (input.specialisation !== undefined) {
+    data.specialisation = input.specialisation.trim() || null;
+  }
+  if (input.status !== undefined) data.status = input.status;
+
+  if (input.password) {
+    data.password = await bcrypt.hash(input.password, 10);
+  }
+
+  const technician = await prisma.user.update({
+    where: { id },
+    data,
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      specialisation: true,
+      status: true,
+      assignedRequests: technicianInclude.assignedRequests,
+    },
+  });
+
+  return getTechnicianById(technician.id);
 }

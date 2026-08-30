@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import {
   UserError,
   createUser,
-  deactivateUser,
+  deleteUser,
   listUsers,
   parseUserId,
   updateUser,
@@ -96,15 +96,15 @@ export async function putUser(req: Request, res: Response) {
   }
 }
 
-export async function patchDeactivateUser(req: Request, res: Response) {
+export async function deleteUserById(req: Request, res: Response) {
   try {
     const id = parseUserId(String(req.params.id));
-    const user = await deactivateUser(id);
+    const result = await deleteUser(id);
 
     res.status(200).json({
       success: true,
-      message: 'User deactivated successfully',
-      data: user,
+      message: 'User deleted successfully',
+      data: result,
     });
   } catch (error) {
     if (error instanceof UserError) {
@@ -118,7 +118,7 @@ export async function patchDeactivateUser(req: Request, res: Response) {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: 'Failed to deactivate user',
+      message: 'Failed to delete user',
     });
   }
 }

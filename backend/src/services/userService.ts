@@ -145,6 +145,8 @@ export async function updateUser(id: number, input: UpdateUserInput) {
   if (dbRole !== undefined) {
     data.specialisation =
       dbRole === 'TECHNICIAN' ? input.specialisation?.trim() || null : null;
+  } else if (input.specialisation !== undefined && existing.role === 'TECHNICIAN') {
+    data.specialisation = input.specialisation.trim() || null;
   }
 
   const user = await prisma.user.update({
@@ -163,27 +165,53 @@ export async function updateUser(id: number, input: UpdateUserInput) {
   return formatUser(user);
 }
 
-export async function deactivateUser(id: number) {
+export async function deleteUser(id: number) {
   const existing = await prisma.user.findUnique({ where: { id } });
 
   if (!existing) {
     throw new UserError('User not found', 404);
   }
 
-  const user = await prisma.user.update({
-    where: { id },
-    data: { status: 'Inactive' },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      phone: true,
-      role: true,
-      status: true,
-    },
-  });
+  const [activeAssignments, maintenanceRecords, submittedRequests] =
+    await Promise.all([
+      prisma.maintenanceRequest.count({
+        where: {
+          assignedTechnicianId: id,
+          status: { in: ['Assigned', 'In Progress', 'Pending'] },
+        },
+      }),
+      prisma.maintenanceRecord.count({
+        where: { technicianId: id },
+      }),
+      prisma.maintenanceRequest.count({
+        where: { userId: id },
+      }),
+    ]);
 
-  return formatUser(user);
+  if (activeAssignments > 0) {
+    throw new UserError(
+      `Cannot delete user. This technician has ${activeAssignments} active maintenance assignment(s). Reassign or complete them first.`,
+      409,
+    );
+  }
+
+  if (maintenanceRecords > 0) {
+    throw new UserError(
+      'Cannot delete user. This technician has maintenance records linked to their account.',
+      409,
+    );
+  }
+
+  if (submittedRequests > 0) {
+    throw new UserError(
+      `Cannot delete user. This user has ${submittedRequests} submitted maintenance request(s).`,
+      409,
+    );
+  }
+
+  await prisma.user.delete({ where: { id } });
+
+  return { id: formatUserId(id) };
 }
 
 export function parseUserId(id: string) {
