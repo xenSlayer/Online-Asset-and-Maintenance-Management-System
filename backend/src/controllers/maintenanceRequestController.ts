@@ -128,21 +128,15 @@ export async function patchAssignRequest(req: Request, res: Response) {
     }
 
     const id = parseRequestId(decodeURIComponent(String(req.params.id)));
-    const { technicianId } = req.body;
+    const { technicianId } = req.body as { technicianId?: string | null };
 
-    if (!technicianId) {
-      res.status(400).json({
-        success: false,
-        message: 'Technician ID is required',
-      });
-      return;
-    }
-
-    const request = await assignMaintenanceRequest(id, technicianId, req.auth);
+    const request = await assignMaintenanceRequest(id, technicianId ?? null, req.auth);
 
     res.status(200).json({
       success: true,
-      message: 'Request assigned successfully',
+      message: technicianId?.trim()
+        ? 'Request assigned successfully'
+        : 'Request unassigned successfully',
       data: request,
     });
   } catch (error) {

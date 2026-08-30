@@ -79,7 +79,7 @@ export async function approveMaintenanceRequest(
 
 export async function assignMaintenanceRequest(
   id: string,
-  technicianId: string,
+  technicianId: string | null,
 ): Promise<MaintenanceRequest> {
   const response = await fetch(
     `/api/maintenance-requests/${encodeURIComponent(id)}/assign`,

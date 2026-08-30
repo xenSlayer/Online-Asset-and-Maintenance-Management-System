@@ -6,6 +6,7 @@ import {
   formatDisplayDate,
   formatIsoDate,
   formatRequestId,
+  formatTechnicianId,
   parseAssetId,
   parseRequestId,
   parseTechnicianUserId,
@@ -34,7 +35,7 @@ function formatRequest(request: {
   requestDate: Date;
   asset: { id: number; assetName: string };
   user: { name: string };
-  assignedTechnician: { name: string } | null;
+  assignedTechnician: { id: number; name: string } | null;
 }) {
   return {
     id: formatRequestId(request.id),
@@ -47,6 +48,9 @@ function formatRequest(request: {
     status: request.status,
     submittedBy: request.user.name,
     assignedTechnician: request.assignedTechnician?.name,
+    assignedTechnicianId: request.assignedTechnician
+      ? formatTechnicianId(request.assignedTechnician.id)
+      : undefined,
   };
 }
 
@@ -173,7 +177,7 @@ export async function approveMaintenanceRequest(
 
 export async function assignMaintenanceRequest(
   id: number,
-  technicianId: string,
+  technicianId: string | null | undefined,
   auth: AuthPayload,
 ) {
   if (auth.role !== 'ADMIN') {
@@ -193,7 +197,22 @@ export async function assignMaintenanceRequest(
     );
   }
 
-  const technicianUserId = parseTechnicianUserId(technicianId);
+  const normalizedTechnicianId = technicianId?.trim() || null;
+
+  if (!normalizedTechnicianId) {
+    const request = await prisma.maintenanceRequest.update({
+      where: { id },
+      data: {
+        assignedTechnicianId: null,
+        status: existing.status === 'In Progress' ? 'Assigned' : existing.status,
+      },
+      include: requestInclude,
+    });
+
+    return formatRequest(request);
+  }
+
+  const technicianUserId = parseTechnicianUserId(normalizedTechnicianId);
 
   const technician = await prisma.user.findFirst({
     where: { id: technicianUserId, role: 'TECHNICIAN' },

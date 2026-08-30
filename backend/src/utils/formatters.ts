@@ -10,6 +10,10 @@ export function formatAssetId(id: number) {
   return `AST-${String(id).padStart(3, '0')}`;
 }
 
+export function formatTechnicianId(id: number) {
+  return `TEC-${String(id).padStart(3, '0')}`;
+}
+
 export function formatDisplayDate(date: Date) {
   return date.toLocaleDateString('en-GB', {
     day: '2-digit',

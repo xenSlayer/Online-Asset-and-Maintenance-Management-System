@@ -21,9 +21,18 @@ import { getCurrentUser } from '../utils/auth';
 
 type View = 'list' | 'form';
 
+function isUnassigned(request: MaintenanceRequest) {
+  return !request.assignedTechnicianId && !request.assignedTechnician;
+}
+
 function getTabCounts(requests: MaintenanceRequest[]) {
   return [
     { key: 'all' as const, label: 'All Requests', count: requests.length },
+    {
+      key: 'unassigned' as const,
+      label: 'Unassigned',
+      count: requests.filter(isUnassigned).length,
+    },
     {
       key: 'Pending' as const,
       label: 'Pending',
@@ -110,6 +119,10 @@ export function MaintenanceRequestsPage() {
       return requestList;
     }
 
+    if (activeTab === 'unassigned') {
+      return requestList.filter(isUnassigned);
+    }
+
     return requestList.filter((request) => request.status === activeTab);
   }, [requestList, activeTab]);
 
@@ -170,17 +183,20 @@ export function MaintenanceRequestsPage() {
 
   const handleAssignClick = (request: MaintenanceRequest) => {
     setAssigningRequest(request);
-    setSelectedTechnicianId(technicians[0]?.id ?? '');
+    setSelectedTechnicianId(request.assignedTechnicianId ?? '');
     setError('');
   };
 
   const handleAssignConfirm = async () => {
-    if (!assigningRequest || !selectedTechnicianId) {
+    if (!assigningRequest) {
       return;
     }
 
     await runAction(assigningRequest.id, () =>
-      assignMaintenanceRequest(assigningRequest.id, selectedTechnicianId),
+      assignMaintenanceRequest(
+        assigningRequest.id,
+        selectedTechnicianId || null,
+      ),
     );
 
     setAssigningRequest(null);
@@ -260,7 +276,9 @@ export function MaintenanceRequestsPage() {
           {assigningRequest && (
             <div className="mb-4 rounded-xl border border-indigo-200 bg-indigo-50 p-4">
               <p className="mb-3 text-sm font-medium text-slate-800">
-                Assign technician to {assigningRequest.id}
+                {assigningRequest.assignedTechnician
+                  ? `Update assignment for ${assigningRequest.id}`
+                  : `Assign technician to ${assigningRequest.id}`}
               </p>
               <div className="flex flex-wrap items-end gap-3">
                 <div className="min-w-[220px]">
@@ -274,6 +292,7 @@ export function MaintenanceRequestsPage() {
                     }
                     className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                   >
+                    <option value="">Unassigned</option>
                     {technicians.map((technician) => (
                       <option key={technician.id} value={technician.id}>
                         {technician.name} — {technician.specialisation}
@@ -283,11 +302,11 @@ export function MaintenanceRequestsPage() {
                 </div>
                 <button
                   type="button"
-                  disabled={!selectedTechnicianId || actionLoadingId !== ''}
+                  disabled={actionLoadingId !== ''}
                   onClick={handleAssignConfirm}
                   className="btn-primary-gradient rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm disabled:opacity-60"
                 >
-                  Confirm Assign
+                  {selectedTechnicianId ? 'Save Assignment' : 'Remove Assignment'}
                 </button>
                 <button
                   type="button"
