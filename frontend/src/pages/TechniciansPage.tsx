@@ -1,19 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
   fetchTechnician,
   fetchTechnicians,
   updateTechnician,
 } from '../api/technicians';
+import { createUser } from '../api/users';
+import { UserForm } from '../components/users/UserForm';
 import { DashboardLayout } from '../layouts/DashboardLayout';
 import { AssignedTasksCard } from '../components/technicians/AssignedTasksCard';
 import { TechnicianList } from '../components/technicians/TechnicianList';
 import { TechnicianProfileCard } from '../components/technicians/TechnicianProfileCard';
 import { TechnicianProfileForm } from '../components/technicians/TechnicianProfileForm';
 import type { Technician, TechnicianDetail } from '../types/technician';
-import type { UserStatus } from '../types/user';
+import type { UserRole, UserStatus } from '../types/user';
 
-type View = 'list' | 'edit';
+type View = 'list' | 'edit' | 'add';
 
 export function TechniciansPage() {
   const [view, setView] = useState<View>('list');
@@ -69,6 +70,11 @@ export function TechniciansPage() {
     }
   };
 
+  const openAddForm = () => {
+    setFormError('');
+    setView('add');
+  };
+
   const openEditForm = () => {
     setFormError('');
     setView('edit');
@@ -77,6 +83,39 @@ export function TechniciansPage() {
   const closeEditForm = () => {
     setFormError('');
     setView('list');
+  };
+
+  const handleCreateTechnician = async (input: {
+    name: string;
+    email: string;
+    phone: string;
+    role: UserRole;
+    status: UserStatus;
+    password?: string;
+    specialisation?: string;
+  }) => {
+    if (!input.password) {
+      setFormError('Password is required for new technicians');
+      return;
+    }
+
+    setSaving(true);
+    setFormError('');
+
+    try {
+      await createUser({
+        ...input,
+        password: input.password,
+      });
+      await loadTechnicians();
+      closeEditForm();
+    } catch (err) {
+      setFormError(
+        err instanceof Error ? err.message : 'Failed to create technician',
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSave = async (input: {
@@ -121,12 +160,13 @@ export function TechniciansPage() {
                 View technician profiles and manage assignments
               </p>
             </div>
-            <Link
-              to="/users"
+            <button
+              type="button"
+              onClick={openAddForm}
               className="btn-primary-gradient rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:opacity-90 active:scale-[0.98]"
             >
               + Add Technician
-            </Link>
+            </button>
           </div>
 
           {error && (
@@ -173,6 +213,20 @@ export function TechniciansPage() {
             </div>
           )}
         </>
+      )}
+
+      {view === 'add' && (
+        <UserForm
+          defaultRole="Technician"
+          lockRole
+          backLabel="Back to Technicians"
+          title="Add Technician"
+          subtitle="Create a new technician account"
+          saving={saving}
+          error={formError}
+          onCancel={closeEditForm}
+          onSave={handleCreateTechnician}
+        />
       )}
 
       {view === 'edit' && selectedTechnician && (

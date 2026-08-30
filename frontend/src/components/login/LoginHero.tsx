@@ -1,12 +1,44 @@
+import { useEffect, useState } from 'react';
+import { fetchPublicStats, type PublicStats } from '../../api/stats';
 import { Logo } from '../ui/Logo';
 
-const stats = [
-  { value: '214', label: 'Assets Tracked' },
-  { value: '89', label: 'Tasks Completed' },
-  { value: '6', label: 'Active Technicians' },
+const statLabels: { key: keyof PublicStats; label: string }[] = [
+  { key: 'totalAssets', label: 'Assets Tracked' },
+  { key: 'completedTasks', label: 'Tasks Completed' },
+  { key: 'activeTechnicians', label: 'Active Technicians' },
 ];
 
+function formatStatValue(value: number | null) {
+  if (value === null) {
+    return '—';
+  }
+
+  return value.toLocaleString();
+}
+
 export function LoginHero() {
+  const [stats, setStats] = useState<PublicStats | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchPublicStats()
+      .then((data) => {
+        if (!cancelled) {
+          setStats(data);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setStats({ totalAssets: 0, completedTasks: 0, activeTechnicians: 0 });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <div className="hero-gradient relative hidden min-h-screen flex-col px-10 py-10 text-white lg:flex lg:px-16 lg:py-12">
       <Logo variant="light" className="h-14" />
@@ -21,9 +53,11 @@ export function LoginHero() {
         </p>
 
         <div className="mt-12 grid grid-cols-3 gap-6 border-t border-white/10 pt-10">
-          {stats.map((stat) => (
-            <div key={stat.label}>
-              <p className="text-[30px] font-bold">{stat.value}</p>
+          {statLabels.map((stat) => (
+            <div key={stat.key}>
+              <p className="text-[30px] font-bold">
+                {formatStatValue(stats ? stats[stat.key] : null)}
+              </p>
               <p className="mt-1 text-sm text-indigo-300">{stat.label}</p>
             </div>
           ))}

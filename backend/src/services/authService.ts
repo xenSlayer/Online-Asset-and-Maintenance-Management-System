@@ -1,12 +1,11 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../config/database';
-import { toDatabaseRole, toFrontendRole } from '../utils/role';
+import { toFrontendRole } from '../utils/role';
 
 interface LoginInput {
   email: string;
   password: string;
-  role: string;
 }
 
 export class AuthError extends Error {
@@ -18,9 +17,7 @@ export class AuthError extends Error {
   }
 }
 
-export async function loginUser({ email, password, role }: LoginInput) {
-  const dbRole = toDatabaseRole(role);
-
+export async function loginUser({ email, password }: LoginInput) {
   const user = await prisma.user.findUnique({
     where: { email: email.toLowerCase().trim() },
   });
@@ -33,10 +30,6 @@ export async function loginUser({ email, password, role }: LoginInput) {
 
   if (!passwordMatch) {
     throw new AuthError('Invalid email or password');
-  }
-
-  if (user.role !== dbRole) {
-    throw new AuthError('Selected role does not match your account');
   }
 
   const secret = process.env.JWT_SECRET;

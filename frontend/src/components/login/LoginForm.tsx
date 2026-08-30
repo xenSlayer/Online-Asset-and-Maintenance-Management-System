@@ -2,13 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { loginRequest } from '../../utils/auth';
-import { Button, Input, Label, Logo, Select } from '../ui';
-
-const roleOptions = [
-  { value: 'ADMINISTRATOR', label: 'Administrator' },
-  { value: 'STAFF_USER', label: 'Staff User' },
-  { value: 'TECHNICIAN', label: 'Technician' },
-];
+import { Button, Input, Label, Logo } from '../ui';
 
 export function LoginForm() {
   const navigate = useNavigate();
@@ -24,10 +18,9 @@ export function LoginForm() {
     const formData = new FormData(event.currentTarget);
     const email = String(formData.get('email') ?? '');
     const password = String(formData.get('password') ?? '');
-    const role = String(formData.get('role') ?? '');
 
     try {
-      await loginRequest(email, password, role);
+      await loginRequest(email, password);
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
@@ -91,26 +84,6 @@ export function LoginForm() {
               }
               required
             />
-          </div>
-
-          <div>
-            <Label htmlFor="role">Role</Label>
-            <Select
-              id="role"
-              name="role"
-              placeholder="Select your role"
-              options={roleOptions}
-              required
-            />
-          </div>
-
-          <div className="flex justify-end">
-            <a
-              href="#"
-              className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
-            >
-              Forgot password?
-            </a>
           </div>
 
           <Button type="submit" fullWidth className="py-3" disabled={loading}>

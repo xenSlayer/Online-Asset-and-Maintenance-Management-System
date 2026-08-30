@@ -3,19 +3,21 @@ interface LogoProps {
   variant?: 'light' | 'dark' | 'sidebar';
 }
 
-export function Logo({ className = 'h-14', variant = 'light' }: LogoProps) {
-  const variantClass =
-    variant === 'light'
-      ? 'brightness-0 invert'
-      : variant === 'sidebar'
-        ? 'h-11 brightness-0 invert mix-blend-screen'
-        : '';
+const LOGO_SRC = '/icon.jpeg';
 
+const variantClasses: Record<NonNullable<LogoProps['variant']>, string> = {
+  // Invert only: white JPEG background blends into dark surfaces; logo stays visible.
+  light: 'max-h-14 w-full invert object-contain object-left',
+  dark: 'max-h-14 w-full object-contain object-left',
+  sidebar: 'max-h-11 w-full invert object-contain object-left',
+};
+
+export function Logo({ className, variant = 'light' }: LogoProps) {
   return (
     <img
-      src="/logo.svg"
+      src={LOGO_SRC}
       alt="OA Management System"
-      className={`w-auto ${variantClass} ${className}`}
+      className={`block ${variantClasses[variant]} ${className ?? ''}`}
     />
   );
 }

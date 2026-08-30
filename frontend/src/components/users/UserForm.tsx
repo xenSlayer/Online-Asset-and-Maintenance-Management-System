@@ -6,6 +6,11 @@ interface UserFormProps {
   user?: User | null;
   saving?: boolean;
   error?: string;
+  defaultRole?: UserRole;
+  lockRole?: boolean;
+  backLabel?: string;
+  title?: string;
+  subtitle?: string;
   onCancel: () => void;
   onSave: (input: {
     name: string;
@@ -14,6 +19,7 @@ interface UserFormProps {
     role: UserRole;
     status: UserStatus;
     password?: string;
+    specialisation?: string;
   }) => Promise<void>;
 }
 
@@ -40,15 +46,23 @@ export function UserForm({
   user,
   saving = false,
   error,
+  defaultRole,
+  lockRole = false,
+  backLabel = 'Back to Users',
+  title = 'Add / Edit User',
+  subtitle = 'Fill in user details and assign a role',
   onCancel,
   onSave,
 }: UserFormProps) {
   const [name, setName] = useState(user?.name ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
   const [phone, setPhone] = useState(user?.phone ?? '');
-  const [role, setRole] = useState<UserRole | ''>(user?.role ?? '');
+  const [role, setRole] = useState<UserRole | ''>(user?.role ?? defaultRole ?? '');
+  const [specialisation, setSpecialisation] = useState('');
   const [status, setStatus] = useState<UserStatus>(user?.status ?? 'Active');
   const [password, setPassword] = useState('');
+
+  const isTechnicianRole = role === 'Technician';
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -64,6 +78,7 @@ export function UserForm({
       role,
       status,
       password: password || undefined,
+      specialisation: isTechnicianRole ? specialisation : undefined,
     });
   };
 
@@ -74,14 +89,12 @@ export function UserForm({
         onClick={onCancel}
         className="mb-5 flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-800"
       >
-        ← Back to Users
+        ← {backLabel}
       </button>
 
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-slate-900">Add / Edit User</h1>
-        <p className="mt-0.5 text-sm text-slate-500">
-          Fill in user details and assign a role
-        </p>
+        <h1 className="text-xl font-bold text-slate-900">{title}</h1>
+        <p className="mt-0.5 text-sm text-slate-500">{subtitle}</p>
       </div>
 
       <form
@@ -159,12 +172,15 @@ export function UserForm({
             <select
               value={role}
               onChange={(event) => setRole(event.target.value as UserRole)}
-              className={inputClass}
+              className={`${inputClass} ${lockRole ? 'cursor-not-allowed bg-slate-50 text-slate-500' : ''}`}
               required
+              disabled={lockRole}
             >
-              <option value="" disabled>
-                Select role
-              </option>
+              {!lockRole && (
+                <option value="" disabled>
+                  Select role
+                </option>
+              )}
               {roleOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -172,6 +188,19 @@ export function UserForm({
               ))}
             </select>
           </div>
+
+          {isTechnicianRole && (
+            <div>
+              <FieldLabel>Specialisation</FieldLabel>
+              <input
+                type="text"
+                value={specialisation}
+                onChange={(event) => setSpecialisation(event.target.value)}
+                placeholder="e.g. Electrical, HVAC, Mechanical"
+                className={inputClass}
+              />
+            </div>
+          )}
 
           <div>
             <FieldLabel>Account Status</FieldLabel>

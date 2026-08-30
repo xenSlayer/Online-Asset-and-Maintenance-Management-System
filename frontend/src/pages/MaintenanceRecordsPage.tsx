@@ -70,21 +70,13 @@ export function MaintenanceRecordsPage() {
 
   return (
     <DashboardLayout pageTitle="Maintenance Records">
-      <div className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">
-            Maintenance Records
-          </h1>
-          <p className="mt-0.5 text-sm text-slate-500">
-            Complete history of all maintenance activities
-          </p>
-        </div>
-        <button
-          type="button"
-          className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
-        >
-          Export PDF
-        </button>
+      <div className="mb-6">
+        <h1 className="text-xl font-bold text-slate-900">
+          Maintenance Records
+        </h1>
+        <p className="mt-0.5 text-sm text-slate-500">
+          Complete history of all maintenance activities
+        </p>
       </div>
 
       {error && (

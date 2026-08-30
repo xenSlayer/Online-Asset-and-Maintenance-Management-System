@@ -83,6 +83,7 @@ export function UsersPage() {
     role: UserRole;
     status: UserStatus;
     password?: string;
+    specialisation?: string;
   }) => {
     setSaving(true);
     setFormError('');

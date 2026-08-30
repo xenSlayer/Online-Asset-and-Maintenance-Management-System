@@ -3,17 +3,17 @@ import { AuthError, loginUser } from '../services/authService';
 
 export async function login(req: Request, res: Response) {
   try {
-    const { email, password, role } = req.body;
+    const { email, password } = req.body;
 
-    if (!email || !password || !role) {
+    if (!email || !password) {
       res.status(400).json({
         success: false,
-        message: 'Email, password, and role are required',
+        message: 'Email and password are required',
       });
       return;
     }
 
-    const result = await loginUser({ email, password, role });
+    const result = await loginUser({ email, password });
 
     res.status(200).json({
       success: true,

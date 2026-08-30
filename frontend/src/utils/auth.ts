@@ -60,12 +60,11 @@ function toCurrentUser(data: NonNullable<LoginResponse['data']>): CurrentUser {
 export async function loginRequest(
   email: string,
   password: string,
-  role: string,
 ): Promise<CurrentUser> {
   const response = await fetch('/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, role }),
+    body: JSON.stringify({ email, password }),
   });
 
   const data = (await response.json()) as LoginResponse;

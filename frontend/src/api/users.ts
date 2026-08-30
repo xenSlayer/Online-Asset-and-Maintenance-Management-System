@@ -45,6 +45,7 @@ export interface SaveUserInput {
   role: UserRole;
   status: UserStatus;
   password?: string;
+  specialisation?: string;
 }
 
 export async function createUser(input: SaveUserInput): Promise<User> {
