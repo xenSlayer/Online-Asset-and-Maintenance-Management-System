@@ -1,4 +1,5 @@
 import prisma from '../config/database';
+import { Prisma } from '@prisma/client';
 import type { AuthPayload } from '../middleware/authMiddleware';
 import {
   formatAssetId,
@@ -67,7 +68,10 @@ function getRoleFilter(auth: AuthPayload) {
 
 export async function listMaintenanceRequests(auth: AuthPayload) {
   const requests = await prisma.maintenanceRequest.findMany({
-    where: getRoleFilter(auth),
+    where: {
+      ...getRoleFilter(auth),
+      status: { not: 'Completed' },
+    },
     orderBy: { requestDate: 'desc' },
     include: requestInclude,
   });
@@ -86,7 +90,25 @@ export async function createMaintenanceRequest(
   auth: AuthPayload,
   input: CreateRequestInput,
 ) {
-  const assetId = parseAssetId(input.assetId);
+  const user = await prisma.user.findUnique({
+    where: { id: auth.userId },
+    select: { id: true },
+  });
+
+  if (!user) {
+    throw new MaintenanceRequestError(
+      'Your session is invalid. Please log in again.',
+      401,
+    );
+  }
+
+  let assetId: number;
+
+  try {
+    assetId = parseAssetId(input.assetId);
+  } catch {
+    throw new MaintenanceRequestError('Invalid asset ID', 400);
+  }
 
   const asset = await prisma.asset.findUnique({ where: { id: assetId } });
 
@@ -110,6 +132,17 @@ export async function createMaintenanceRequest(
 
   return formatRequest(request);
 }
+
+function isPrismaForeignKeyError(
+  error: unknown,
+): error is Prisma.PrismaClientKnownRequestError {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === 'P2003'
+  );
+}
+
+export { isPrismaForeignKeyError };
 
 export async function approveMaintenanceRequest(
   id: number,
@@ -153,9 +186,9 @@ export async function assignMaintenanceRequest(
     throw new MaintenanceRequestError('Request not found', 404);
   }
 
-  if (!['Pending', 'Assigned'].includes(existing.status)) {
+  if (!['Pending', 'Assigned', 'In Progress'].includes(existing.status)) {
     throw new MaintenanceRequestError(
-      'Only pending or assigned requests can be reassigned',
+      'Only pending, assigned, or in-progress requests can be reassigned',
       400,
     );
   }
@@ -174,7 +207,7 @@ export async function assignMaintenanceRequest(
     where: { id },
     data: {
       assignedTechnicianId: technicianUserId,
-      status: 'Assigned',
+      status: existing.status === 'Pending' ? 'Assigned' : existing.status,
     },
     include: requestInclude,
   });

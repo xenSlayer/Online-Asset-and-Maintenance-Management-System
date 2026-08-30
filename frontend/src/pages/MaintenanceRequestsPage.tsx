@@ -40,12 +40,6 @@ function getTabCounts(requests: MaintenanceRequest[]) {
       count: requests.filter((request) => request.status === 'In Progress')
         .length,
     },
-    {
-      key: 'Completed' as const,
-      label: 'Completed',
-      count: requests.filter((request) => request.status === 'Completed')
-        .length,
-    },
   ];
 }
 
@@ -247,6 +241,7 @@ export function MaintenanceRequestsPage() {
                 type="button"
                 onClick={() => {
                   setFormError('');
+                  void loadFormData();
                   setView('form');
                 }}
                 className="btn-primary-gradient rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:opacity-90 active:scale-[0.98]"

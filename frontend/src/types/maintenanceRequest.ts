@@ -6,7 +6,7 @@ export type RequestStatus =
   | 'In Progress'
   | 'Completed';
 
-export type StatusTab = 'all' | RequestStatus;
+export type StatusTab = 'all' | Exclude<RequestStatus, 'Completed'>;
 
 export interface MaintenanceRequest {
   id: string;

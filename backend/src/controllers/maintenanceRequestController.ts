@@ -6,6 +6,7 @@ import {
   completeMaintenanceRequest,
   createMaintenanceRequest,
   deleteMaintenanceRequest,
+  isPrismaForeignKeyError,
   listMaintenanceRequests,
   parseRequestId,
   updateMaintenanceRequestProgress,
@@ -67,6 +68,14 @@ export async function postMaintenanceRequest(req: Request, res: Response) {
       res.status(error.statusCode).json({
         success: false,
         message: error.message,
+      });
+      return;
+    }
+
+    if (isPrismaForeignKeyError(error)) {
+      res.status(401).json({
+        success: false,
+        message: 'Your session is invalid. Please log in again.',
       });
       return;
     }

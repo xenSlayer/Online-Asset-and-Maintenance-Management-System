@@ -1,7 +1,6 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import type { Asset } from '../../types/asset';
 import type { RequestPriority } from '../../types/maintenanceRequest';
-import { getCurrentUser } from '../../utils/auth';
 import { PriorityBadge } from './PriorityBadge';
 
 interface RequestFormProps {
@@ -37,12 +36,25 @@ export function RequestForm({
   onCancel,
   onSubmit,
 }: RequestFormProps) {
-  const currentUser = getCurrentUser();
   const today = new Date().toISOString().slice(0, 10);
   const [assetId, setAssetId] = useState(assets[0]?.id ?? '');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<RequestPriority>('Medium');
   const [requestDate, setRequestDate] = useState(today);
+
+  useEffect(() => {
+    if (assets.length === 0) {
+      return;
+    }
+
+    setAssetId((current) => {
+      if (current && assets.some((asset) => asset.id === current)) {
+        return current;
+      }
+
+      return assets[0].id;
+    });
+  }, [assets]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -152,26 +164,6 @@ export function RequestForm({
               ))}
             </select>
             <PriorityBadge priority={priority} className="mt-2" />
-          </div>
-
-          <div>
-            <FieldLabel>Submitted By</FieldLabel>
-            <input
-              type="text"
-              value={currentUser?.name ?? ''}
-              readOnly
-              className={`${inputClass} cursor-not-allowed bg-slate-50 text-slate-500`}
-            />
-          </div>
-
-          <div>
-            <FieldLabel>Request Status</FieldLabel>
-            <input
-              type="text"
-              value="Pending"
-              readOnly
-              className={`${inputClass} cursor-not-allowed bg-slate-50 text-slate-500`}
-            />
           </div>
         </div>
 

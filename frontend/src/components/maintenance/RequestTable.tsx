@@ -137,28 +137,15 @@ export function RequestTable({
                       )}
 
                       {isAdmin &&
-                        request.status === 'Assigned' &&
-                        !request.assignedTechnician && (
+                        (request.status === 'Assigned' ||
+                          request.status === 'In Progress') && (
                           <button
                             type="button"
                             disabled={isLoading}
                             onClick={() => onAssign(request)}
                             className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-60"
                           >
-                            Assign
-                          </button>
-                        )}
-
-                      {isAdmin &&
-                        request.status === 'Assigned' &&
-                        request.assignedTechnician && (
-                          <button
-                            type="button"
-                            disabled={isLoading}
-                            onClick={() => onAssign(request)}
-                            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-60"
-                          >
-                            Reassign
+                            {request.assignedTechnician ? 'Reassign' : 'Assign'}
                           </button>
                         )}
 

@@ -43,7 +43,21 @@ export function authenticate(
 
   try {
     const payload = jwt.verify(token, secret) as AuthPayload;
-    req.auth = payload;
+    const userId = Number(payload.userId);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      res.status(401).json({
+        success: false,
+        message: 'Invalid session. Please log in again.',
+      });
+      return;
+    }
+
+    req.auth = {
+      userId,
+      email: payload.email,
+      role: payload.role,
+    };
     next();
   } catch {
     res.status(401).json({

@@ -1,5 +1,5 @@
 import type { MaintenanceRequest, RequestPriority } from '../types/maintenanceRequest';
-import { getCurrentUser } from '../utils/auth';
+import { getCurrentUser, logoutUser } from '../utils/auth';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -22,6 +22,12 @@ function authHeaders() {
 
 async function parseResponse<T>(response: Response): Promise<T> {
   const data = (await response.json()) as ApiResponse<T>;
+
+  if (response.status === 401) {
+    logoutUser();
+    window.location.href = '/login';
+    throw new Error(data.message || 'Session expired. Please log in again.');
+  }
 
   if (!response.ok || !data.success) {
     throw new Error(data.message || 'Request failed');
