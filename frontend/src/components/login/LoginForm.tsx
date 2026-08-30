@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff, Lock, Mail } from 'lucide-react';
-import { setCurrentUser } from '../../utils/auth';
+import { loginRequest } from '../../utils/auth';
 import { Button, Input, Label, Logo, Select } from '../ui';
 
 const roleOptions = [
@@ -13,13 +13,27 @@ const roleOptions = [
 export function LoginForm() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setError('');
+    setLoading(true);
+
     const formData = new FormData(event.currentTarget);
-    const role = String(formData.get('role') ?? 'ADMINISTRATOR');
-    setCurrentUser(role);
-    navigate('/dashboard');
+    const email = String(formData.get('email') ?? '');
+    const password = String(formData.get('password') ?? '');
+    const role = String(formData.get('role') ?? '');
+
+    try {
+      await loginRequest(email, password, role);
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -37,10 +51,17 @@ export function LoginForm() {
         </div>
 
         <form className="space-y-5" onSubmit={handleSubmit}>
+          {error && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
           <div>
             <Label htmlFor="email">Email Address</Label>
             <Input
               id="email"
+              name="email"
               type="email"
               placeholder="name@company.com"
               autoComplete="email"
@@ -53,6 +74,7 @@ export function LoginForm() {
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
+              name="password"
               type={showPassword ? 'text' : 'password'}
               placeholder="Enter your password"
               autoComplete="current-password"
@@ -91,18 +113,11 @@ export function LoginForm() {
             </a>
           </div>
 
-          <Button type="submit" fullWidth className="py-3">
-            Sign In
-            <ArrowRight size={18} />
+          <Button type="submit" fullWidth className="py-3" disabled={loading}>
+            {loading ? 'Signing in…' : 'Sign In'}
+            {!loading && <ArrowRight size={18} />}
           </Button>
         </form>
-
-        <div className="mt-8 border-t border-slate-200 pt-6">
-          <p className="text-center text-xs text-muted">
-            Access is granted based on your assigned role. Contact your
-            administrator if you need help signing in.
-          </p>
-        </div>
       </div>
     </div>
   );

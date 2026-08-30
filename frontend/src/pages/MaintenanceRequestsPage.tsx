@@ -59,7 +59,13 @@ export function MaintenanceRequestsPage() {
   const [view, setView] = useState<View>('list');
   const [activeTab, setActiveTab] = useState<StatusTab>('all');
   const [requestList] = useState(initialRequests);
-  const currentUser = getCurrentUser();
+  const currentUser = getCurrentUser() ?? {
+    id: 0,
+    role: 'Admin' as const,
+    name: 'Guest',
+    email: '',
+    token: '',
+  };
 
   const roleFilteredRequests = useMemo(
     () => filterByRole(requestList, currentUser.role, currentUser.name),

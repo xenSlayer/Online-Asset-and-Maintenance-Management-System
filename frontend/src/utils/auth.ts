@@ -1,35 +1,69 @@
 export type UserRole = 'Admin' | 'Staff' | 'Technician';
 
 export interface CurrentUser {
+  id: number;
   role: UserRole;
   name: string;
+  email: string;
+  token: string;
 }
 
-const ROLE_MAP: Record<string, UserRole> = {
-  ADMINISTRATOR: 'Admin',
-  STAFF_USER: 'Staff',
-  TECHNICIAN: 'Technician',
-};
-
-const DEFAULT_USERS: Record<UserRole, CurrentUser> = {
-  Admin: { role: 'Admin', name: 'Alice Mensah' },
-  Staff: { role: 'Staff', name: 'Bob Nkosi' },
-  Technician: { role: 'Technician', name: 'James Okafor' },
-};
-
-export function setCurrentUser(roleKey: string, name?: string) {
-  const role = ROLE_MAP[roleKey] ?? 'Admin';
-  const user = {
-    role,
-    name: name ?? DEFAULT_USERS[role].name,
+interface LoginResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    token: string;
+    user: {
+      id: number;
+      name: string;
+      email: string;
+      role: UserRole;
+    };
   };
+}
+
+export async function loginRequest(
+  email: string,
+  password: string,
+  role: string,
+): Promise<CurrentUser> {
+  const response = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, role }),
+  });
+
+  const data = (await response.json()) as LoginResponse;
+
+  if (!response.ok || !data.success || !data.data) {
+    throw new Error(data.message || 'Login failed');
+  }
+
+  const user: CurrentUser = {
+    id: data.data.user.id,
+    role: data.data.user.role,
+    name: data.data.user.name,
+    email: data.data.user.email,
+    token: data.data.token,
+  };
+
+  sessionStorage.setItem('oamms_user', JSON.stringify(user));
+  return user;
+}
+
+export function setCurrentUser(user: CurrentUser) {
   sessionStorage.setItem('oamms_user', JSON.stringify(user));
 }
 
-export function getCurrentUser(): CurrentUser {
+export function getCurrentUser(): CurrentUser | null {
   const stored = sessionStorage.getItem('oamms_user');
-  if (stored) {
-    return JSON.parse(stored) as CurrentUser;
+  if (!stored) {
+    return null;
   }
-  return DEFAULT_USERS.Admin;
+
+  return JSON.parse(stored) as CurrentUser;
+}
+
+export function logoutUser() {
+  sessionStorage.removeItem('oamms_user');
 }

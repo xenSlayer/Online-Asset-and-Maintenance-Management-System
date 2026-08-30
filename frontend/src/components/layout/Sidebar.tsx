@@ -1,5 +1,6 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { Avatar, Logo } from '../ui';
+import { getCurrentUser, logoutUser } from '../../utils/auth';
 
 const navItems = [
   { label: 'Dashboard', icon: '⊞', to: '/dashboard' },
@@ -10,7 +11,21 @@ const navItems = [
   { label: 'Maintenance Records', icon: '📋', to: '/maintenance-records' },
 ];
 
+const roleLabels: Record<string, string> = {
+  Admin: 'Administrator',
+  Staff: 'Staff User',
+  Technician: 'Technician',
+};
+
 export function Sidebar() {
+  const navigate = useNavigate();
+  const user = getCurrentUser();
+
+  function handleSignOut() {
+    logoutUser();
+    navigate('/login', { replace: true });
+  }
+
   return (
     <aside className="fixed left-0 top-0 z-30 flex h-screen w-60 flex-col bg-[#0F172A]">
       <div className="border-b border-white/[0.08] p-5">
@@ -42,14 +57,17 @@ export function Sidebar() {
 
       <div className="mx-3 mb-4 rounded-xl bg-white/[0.05] p-4">
         <div className="flex items-center gap-3">
-          <Avatar name="Current User" />
+          <Avatar name={user?.name ?? 'User'} />
           <div>
-            <p className="text-xs font-bold text-white">Current User</p>
-            <p className="text-xs text-indigo-300">Administrator</p>
+            <p className="text-xs font-bold text-white">{user?.name ?? 'User'}</p>
+            <p className="text-xs text-indigo-300">
+              {user ? roleLabels[user.role] ?? user.role : 'Signed in'}
+            </p>
           </div>
         </div>
         <button
           type="button"
+          onClick={handleSignOut}
           className="mt-3 w-full rounded-lg px-3 py-2 text-left text-sm text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
         >
           ↩ Sign out

@@ -31,7 +31,6 @@ function FieldLabel({ children }: { children: ReactNode }) {
 export function RequestForm({ onCancel, onSubmit }: RequestFormProps) {
   const currentUser = getCurrentUser();
   const [priority, setPriority] = useState<RequestPriority>('Medium');
-
   return (
     <div>
       <button
@@ -110,7 +109,7 @@ export function RequestForm({ onCancel, onSubmit }: RequestFormProps) {
             <FieldLabel>Submitted By</FieldLabel>
             <input
               type="text"
-              defaultValue={currentUser.name}
+              defaultValue={currentUser?.name ?? ''}
               readOnly
               className={`${inputClass} cursor-not-allowed bg-slate-50 text-slate-500`}
             />
