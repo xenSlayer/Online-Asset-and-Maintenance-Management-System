@@ -4,11 +4,17 @@ import { AssetStatusBadge } from './AssetStatusBadge';
 
 interface AssetTableProps {
   assets: Asset[];
+  totalCount: number;
   onView: (asset: Asset) => void;
   onEdit: (asset: Asset) => void;
 }
 
-export function AssetTable({ assets, onView, onEdit }: AssetTableProps) {
+export function AssetTable({
+  assets,
+  totalCount,
+  onView,
+  onEdit,
+}: AssetTableProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       <div className="overflow-x-auto">
@@ -34,7 +40,17 @@ export function AssetTable({ assets, onView, onEdit }: AssetTableProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {assets.map((asset) => (
+            {assets.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={7}
+                  className="px-5 py-8 text-center text-sm text-slate-400"
+                >
+                  No assets found
+                </td>
+              </tr>
+            ) : (
+              assets.map((asset) => (
               <tr
                 key={asset.id}
                 className="transition-colors hover:bg-slate-50"
@@ -58,7 +74,7 @@ export function AssetTable({ assets, onView, onEdit }: AssetTableProps) {
                   {asset.category}
                 </td>
                 <td className="px-5 py-4 font-mono text-xs text-slate-500">
-                  {asset.serialNo}
+                  {asset.serialNo || '—'}
                 </td>
                 <td className="px-5 py-4 text-sm text-slate-600">
                   {asset.location}
@@ -88,14 +104,15 @@ export function AssetTable({ assets, onView, onEdit }: AssetTableProps) {
                   </div>
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
       <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3">
         <p className="text-xs text-slate-400">
-          Showing {assets.length} of 214 assets
+          Showing {assets.length} of {totalCount} assets
         </p>
         <div className="flex gap-2">
           <button

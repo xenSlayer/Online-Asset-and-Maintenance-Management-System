@@ -5,10 +5,17 @@ import { UserStatusBadge } from './UserStatusBadge';
 
 interface UserTableProps {
   users: User[];
+  totalCount: number;
   onEdit: (user: User) => void;
+  onDeactivate: (user: User) => void;
 }
 
-export function UserTable({ users, onEdit }: UserTableProps) {
+export function UserTable({
+  users,
+  totalCount,
+  onEdit,
+  onDeactivate,
+}: UserTableProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       <div className="overflow-x-auto">
@@ -28,7 +35,17 @@ export function UserTable({ users, onEdit }: UserTableProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {users.map((user) => (
+            {users.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={6}
+                  className="px-5 py-8 text-center text-sm text-slate-400"
+                >
+                  No users found
+                </td>
+              </tr>
+            ) : (
+              users.map((user) => (
               <tr
                 key={user.id}
                 className="transition-colors hover:bg-slate-50"
@@ -69,21 +86,24 @@ export function UserTable({ users, onEdit }: UserTableProps) {
                     </button>
                     <button
                       type="button"
-                      className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100"
+                      onClick={() => onDeactivate(user)}
+                      disabled={user.status === 'Inactive'}
+                      className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Deactivate
                     </button>
                   </div>
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
       <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3">
         <p className="text-xs text-slate-400">
-          Showing {users.length} of 48 users
+          Showing {users.length} of {totalCount} users
         </p>
         <div className="flex gap-2">
           <button

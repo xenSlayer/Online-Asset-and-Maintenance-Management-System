@@ -1,5 +1,10 @@
-import { useMemo, useState } from 'react';
-import { users as initialUsers } from '../data/users';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  createUser,
+  deactivateUser,
+  fetchUsers,
+  updateUser,
+} from '../api/users';
 import { DashboardLayout } from '../layouts/DashboardLayout';
 import { UserForm } from '../components/users/UserForm';
 import {
@@ -7,7 +12,7 @@ import {
   type RoleFilter,
 } from '../components/users/UserSearchFilter';
 import { UserTable } from '../components/users/UserTable';
-import type { User } from '../types/user';
+import type { User, UserRole, UserStatus } from '../types/user';
 
 type View = 'list' | 'form';
 
@@ -16,7 +21,27 @@ export function UsersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('All');
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [userList] = useState(initialUsers);
+  const [userList, setUserList] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [formError, setFormError] = useState('');
+
+  const loadUsers = useCallback(async () => {
+    try {
+      const users = await fetchUsers();
+      setUserList(users);
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load users');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
   const filteredUsers = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -35,17 +60,64 @@ export function UsersPage() {
 
   const openAddForm = () => {
     setEditingUser(null);
+    setFormError('');
     setView('form');
   };
 
   const openEditForm = (user: User) => {
     setEditingUser(user);
+    setFormError('');
     setView('form');
   };
 
   const closeForm = () => {
     setEditingUser(null);
+    setFormError('');
     setView('list');
+  };
+
+  const handleSave = async (input: {
+    name: string;
+    email: string;
+    phone: string;
+    role: UserRole;
+    status: UserStatus;
+    password?: string;
+  }) => {
+    setSaving(true);
+    setFormError('');
+
+    try {
+      if (editingUser) {
+        await updateUser(editingUser.id, input);
+      } else {
+        if (!input.password) {
+          setFormError('Password is required for new users');
+          return;
+        }
+
+        await createUser({
+          ...input,
+          password: input.password,
+        });
+      }
+
+      await loadUsers();
+      closeForm();
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Failed to save user');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeactivate = async (user: User) => {
+    try {
+      await deactivateUser(user.id);
+      await loadUsers();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to deactivate user');
+    }
   };
 
   return (
@@ -70,6 +142,12 @@ export function UsersPage() {
             </button>
           </div>
 
+          {error && (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
           <UserSearchFilter
             searchQuery={searchQuery}
             roleFilter={roleFilter}
@@ -77,13 +155,26 @@ export function UsersPage() {
             onRoleFilterChange={setRoleFilter}
           />
 
-          <UserTable users={filteredUsers} onEdit={openEditForm} />
+          {loading ? (
+            <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+              Loading users…
+            </div>
+          ) : (
+            <UserTable
+              users={filteredUsers}
+              totalCount={userList.length}
+              onEdit={openEditForm}
+              onDeactivate={handleDeactivate}
+            />
+          )}
         </>
       ) : (
         <UserForm
           user={editingUser}
+          saving={saving}
+          error={formError}
           onCancel={closeForm}
-          onSave={closeForm}
+          onSave={handleSave}
         />
       )}
     </DashboardLayout>

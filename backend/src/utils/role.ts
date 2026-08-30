@@ -11,7 +11,13 @@ export const FRONTEND_ROLE_MAP: Record<string, string> = {
 };
 
 export function toDatabaseRole(roleKey: string): string {
-  return ROLE_MAP[roleKey] ?? roleKey.toUpperCase();
+  const frontendMap: Record<string, string> = {
+    Admin: 'ADMIN',
+    Staff: 'STAFF',
+    Technician: 'TECHNICIAN',
+  };
+
+  return frontendMap[roleKey] ?? ROLE_MAP[roleKey] ?? roleKey.toUpperCase();
 }
 
 export function toFrontendRole(dbRole: string): string {

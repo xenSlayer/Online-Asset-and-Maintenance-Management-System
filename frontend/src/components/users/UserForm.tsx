@@ -1,11 +1,20 @@
 import { Mail, Smartphone } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
 import type { User, UserRole, UserStatus } from '../../types/user';
 
 interface UserFormProps {
   user?: User | null;
+  saving?: boolean;
+  error?: string;
   onCancel: () => void;
-  onSave: () => void;
+  onSave: (input: {
+    name: string;
+    email: string;
+    phone: string;
+    role: UserRole;
+    status: UserStatus;
+    password?: string;
+  }) => Promise<void>;
 }
 
 const roleOptions: { value: UserRole; label: string }[] = [
@@ -27,7 +36,37 @@ function FieldLabel({ children }: { children: ReactNode }) {
 const inputClass =
   'w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 transition-all focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100';
 
-export function UserForm({ user, onCancel, onSave }: UserFormProps) {
+export function UserForm({
+  user,
+  saving = false,
+  error,
+  onCancel,
+  onSave,
+}: UserFormProps) {
+  const [name, setName] = useState(user?.name ?? '');
+  const [email, setEmail] = useState(user?.email ?? '');
+  const [phone, setPhone] = useState(user?.phone ?? '');
+  const [role, setRole] = useState<UserRole | ''>(user?.role ?? '');
+  const [status, setStatus] = useState<UserStatus>(user?.status ?? 'Active');
+  const [password, setPassword] = useState('');
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!role) {
+      return;
+    }
+
+    await onSave({
+      name,
+      email,
+      phone,
+      role,
+      status,
+      password: password || undefined,
+    });
+  };
+
   return (
     <div>
       <button
@@ -45,25 +84,38 @@ export function UserForm({ user, onCancel, onSave }: UserFormProps) {
         </p>
       </div>
 
-      <div className="max-w-2xl rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <FieldLabel>User ID</FieldLabel>
-            <input
-              type="text"
-              defaultValue={user?.id ?? 'Auto-generated'}
-              readOnly
-              className={`${inputClass} cursor-not-allowed bg-slate-50 text-slate-500`}
-            />
+      <form
+        onSubmit={handleSubmit}
+        className="max-w-2xl rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+      >
+        {error && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {error}
           </div>
+        )}
 
-          <div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {user && (
+            <div>
+              <FieldLabel>User ID</FieldLabel>
+              <input
+                type="text"
+                value={user.id}
+                readOnly
+                className={`${inputClass} cursor-not-allowed bg-slate-50 text-slate-500`}
+              />
+            </div>
+          )}
+
+          <div className={user ? '' : 'sm:col-span-2'}>
             <FieldLabel>Full Name</FieldLabel>
             <input
               type="text"
-              defaultValue={user?.name ?? ''}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
               placeholder="First and last name"
               className={inputClass}
+              required
             />
           </div>
 
@@ -76,9 +128,11 @@ export function UserForm({ user, onCancel, onSave }: UserFormProps) {
               />
               <input
                 type="email"
-                defaultValue={user?.email ?? ''}
-                placeholder="user@assetcore.com"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="user@company.com"
                 className={`${inputClass} pl-9`}
+                required
               />
             </div>
           </div>
@@ -92,7 +146,8 @@ export function UserForm({ user, onCancel, onSave }: UserFormProps) {
               />
               <input
                 type="tel"
-                defaultValue={user?.phone ?? ''}
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
                 placeholder="+1 555 0000"
                 className={`${inputClass} pl-9`}
               />
@@ -102,8 +157,10 @@ export function UserForm({ user, onCancel, onSave }: UserFormProps) {
           <div>
             <FieldLabel>Role</FieldLabel>
             <select
-              defaultValue={user?.role ?? ''}
+              value={role}
+              onChange={(event) => setRole(event.target.value as UserRole)}
               className={inputClass}
+              required
             >
               <option value="" disabled>
                 Select role
@@ -119,25 +176,43 @@ export function UserForm({ user, onCancel, onSave }: UserFormProps) {
           <div>
             <FieldLabel>Account Status</FieldLabel>
             <select
-              defaultValue={user?.status ?? 'Active'}
+              value={status}
+              onChange={(event) =>
+                setStatus(event.target.value as UserStatus)
+              }
               className={inputClass}
             >
-              {statusOptions.map((status) => (
-                <option key={status} value={status}>
-                  {status}
+              {statusOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="sm:col-span-2">
+            <FieldLabel>
+              {user ? 'New Password (optional)' : 'Password'}
+            </FieldLabel>
+            <input
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder={user ? 'Leave blank to keep current password' : 'Enter password'}
+              className={inputClass}
+              required={!user}
+              minLength={user ? undefined : 3}
+            />
           </div>
         </div>
 
         <div className="mt-6 flex gap-3 border-t border-slate-100 pt-4">
           <button
-            type="button"
-            onClick={onSave}
-            className="btn-primary-gradient rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:opacity-90 active:scale-[0.98]"
+            type="submit"
+            disabled={saving}
+            className="btn-primary-gradient rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
           >
-            Save User
+            {saving ? 'Saving…' : 'Save User'}
           </button>
           <button
             type="button"
@@ -147,7 +222,7 @@ export function UserForm({ user, onCancel, onSave }: UserFormProps) {
             Cancel
           </button>
         </div>
-      </div>
+      </form>
     </div>
   );
 }

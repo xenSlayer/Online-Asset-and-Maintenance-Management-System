@@ -1,4 +1,5 @@
 import type { Asset } from '../../types/asset';
+import { formatDisplayDate } from '../../utils/date';
 import { getCategoryEmoji } from '../../utils/asset';
 import { AssetStatusBadge } from './AssetStatusBadge';
 
@@ -10,9 +11,9 @@ interface AssetDetailProps {
 
 const infoRows = (asset: Asset) => [
   { label: 'Asset ID', value: asset.id },
-  { label: 'Serial No.', value: asset.serialNo },
+  { label: 'Serial No.', value: asset.serialNo || '—' },
   { label: 'Category', value: asset.category },
-  { label: 'Purchase Date', value: asset.purchaseDate },
+  { label: 'Purchase Date', value: formatDisplayDate(asset.purchaseDate) },
   { label: 'Location', value: asset.location },
   { label: 'Assigned To', value: asset.assignedTo },
 ];
@@ -94,7 +95,10 @@ export function AssetDetail({ asset, onBack, onEdit }: AssetDetailProps) {
               Maintenance History
             </h2>
             <div className="space-y-4">
-              {asset.maintenanceHistory.map((item) => (
+              {asset.maintenanceHistory.length === 0 ? (
+                <p className="text-sm text-slate-400">No maintenance history yet</p>
+              ) : (
+                asset.maintenanceHistory.map((item) => (
                 <div
                   key={`${item.date}-${item.description}`}
                   className="flex gap-4 border-b border-slate-100 pb-4 last:border-0"
@@ -114,7 +118,8 @@ export function AssetDetail({ asset, onBack, onEdit }: AssetDetailProps) {
                     </p>
                   </div>
                 </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
