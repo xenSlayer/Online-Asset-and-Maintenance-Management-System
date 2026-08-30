@@ -122,9 +122,11 @@ Use a **pooled** connection string for serverless if your provider offers one.
 
 | Setting | Value |
 |---------|-------|
-| **Root Directory** | Repository root |
-| **Build Command** | From `vercel.json` → `npm run build` |
+| **Root Directory** | **Leave empty** (repository root — not `frontend`) |
+| **Build Command** | From `vercel.json` (auto) |
 | **Output Directory** | `frontend/dist` |
+
+> **Important:** If Root Directory is set to `frontend`, the build will fail because the API (`api/`) and backend live at the repo root. In Vercel → Project → Settings → General → Root Directory, clear the field or set it to `.`.
 
 ---
 
