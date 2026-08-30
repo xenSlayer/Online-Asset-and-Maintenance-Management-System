@@ -8,15 +8,17 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  role      String
-  createdAt DateTime @default(now())
+  id              Int      @id @default(autoincrement())
+  name            String
+  email           String   @unique
+  password        String
+  role            String
+  specialisation  String?
+  createdAt       DateTime @default(now())
 
-  maintenanceRequests MaintenanceRequest[]
-  maintenanceRecords  MaintenanceRecord[]  @relation("TechnicianRecords")
+  maintenanceRequests      MaintenanceRequest[] @relation("SubmittedRequests")
+  assignedRequests         MaintenanceRequest[] @relation("AssignedTechnician")
+  maintenanceRecords       MaintenanceRecord[]  @relation("TechnicianRecords")
 }
 
 model Asset {
@@ -41,10 +43,13 @@ model MaintenanceRequest {
   createdAt   DateTime @default(now())
 
   userId Int
-  user   User  @relation(fields: [userId], references: [id])
+  user   User @relation("SubmittedRequests", fields: [userId], references: [id])
 
   assetId Int
   asset   Asset @relation(fields: [assetId], references: [id])
+
+  assignedTechnicianId Int?
+  assignedTechnician   User? @relation("AssignedTechnician", fields: [assignedTechnicianId], references: [id])
 
   maintenanceRecord MaintenanceRecord?
 }

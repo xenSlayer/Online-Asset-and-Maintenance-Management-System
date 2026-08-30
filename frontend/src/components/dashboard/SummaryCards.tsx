@@ -1,3 +1,5 @@
+import type { DashboardSummary } from '../../types/dashboard';
+
 interface SummaryCardProps {
   label: string;
   value: string;
@@ -10,49 +12,6 @@ interface SummaryCardProps {
   };
   subtitle?: string;
 }
-
-const cards: SummaryCardProps[] = [
-  {
-    label: 'Total Users',
-    value: '48',
-    icon: '👥',
-    iconBg: '#EEF2FF',
-    valueColor: '#4F46E5',
-    delta: { text: '↑ +3', className: 'bg-emerald-50 text-emerald-600' },
-  },
-  {
-    label: 'Total Assets',
-    value: '214',
-    icon: '🗄',
-    iconBg: '#EFF6FF',
-    valueColor: '#2563EB',
-    delta: { text: '↑ +12', className: 'bg-emerald-50 text-emerald-600' },
-  },
-  {
-    label: 'Pending Requests',
-    value: '17',
-    icon: '⏳',
-    iconBg: '#FFFBEB',
-    valueColor: '#D97706',
-    delta: { text: '↓ 5 high priority', className: 'bg-red-50 text-red-500' },
-  },
-  {
-    label: 'Completed Tasks',
-    value: '89',
-    icon: '✅',
-    iconBg: '#ECFDF5',
-    valueColor: '#059669',
-    delta: { text: '↑ This quarter', className: 'bg-emerald-50 text-emerald-600' },
-  },
-  {
-    label: 'Available Technicians',
-    value: '6',
-    icon: '👷',
-    iconBg: '#F5F3FF',
-    valueColor: '#7C3AED',
-    subtitle: '2 on assignment',
-  },
-];
 
 function SummaryCard({
   label,
@@ -91,7 +50,71 @@ function SummaryCard({
   );
 }
 
-export function SummaryCards() {
+function buildCards(summary: DashboardSummary): SummaryCardProps[] {
+  return [
+    {
+      label: 'Total Users',
+      value: String(summary.totalUsers),
+      icon: '👥',
+      iconBg: '#EEF2FF',
+      valueColor: '#4F46E5',
+    },
+    {
+      label: 'Total Assets',
+      value: String(summary.totalAssets),
+      icon: '🗄',
+      iconBg: '#EFF6FF',
+      valueColor: '#2563EB',
+    },
+    {
+      label: 'Pending Requests',
+      value: String(summary.pendingRequests),
+      icon: '⏳',
+      iconBg: '#FFFBEB',
+      valueColor: '#D97706',
+      delta:
+        summary.highPriorityPending > 0
+          ? {
+              text: `↓ ${summary.highPriorityPending} high priority`,
+              className: 'bg-red-50 text-red-500',
+            }
+          : undefined,
+    },
+    {
+      label: 'Completed Tasks',
+      value: String(summary.completedTasks),
+      icon: '✅',
+      iconBg: '#ECFDF5',
+      valueColor: '#059669',
+      delta:
+        summary.completedThisQuarter > 0
+          ? {
+              text: `↑ ${summary.completedThisQuarter} this quarter`,
+              className: 'bg-emerald-50 text-emerald-600',
+            }
+          : undefined,
+    },
+    {
+      label: 'Available Technicians',
+      value: String(summary.availableTechnicians),
+      icon: '👷',
+      iconBg: '#F5F3FF',
+      valueColor: '#7C3AED',
+      subtitle:
+        summary.techniciansOnAssignment > 0
+          ? `${summary.techniciansOnAssignment} on assignment`
+          : undefined,
+    },
+  ];
+}
+
+interface SummaryCardsProps {
+  summary: DashboardSummary;
+}
+
+export function SummaryCards({ summary }: SummaryCardsProps) {
+  const cards = buildCards(summary);
+
   return (
     <div className="mb-6 grid grid-cols-2 gap-4 xl:grid-cols-5">
       {cards.map((card) => (

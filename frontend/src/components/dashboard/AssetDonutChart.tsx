@@ -1,18 +1,20 @@
-const segments = [
-  { label: 'Operational', value: 167, color: '#059669' },
-  { label: 'Under Maintenance', value: 24, color: '#D97706' },
-  { label: 'Out of Service', value: 15, color: '#DC2626' },
-  { label: 'Retired', value: 8, color: '#94A3B8' },
-];
+import type { DashboardAssetSegment } from '../../types/dashboard';
 
-const total = segments.reduce((sum, segment) => sum + segment.value, 0);
-const radius = 50;
-const circumference = 2 * Math.PI * radius;
+interface AssetDonutChartProps {
+  segments: DashboardAssetSegment[];
+}
 
-function buildSegments() {
+function buildSegments(segments: DashboardAssetSegment[]) {
+  const total = segments.reduce((sum, segment) => sum + segment.value, 0);
+  const radius = 50;
+  const circumference = 2 * Math.PI * radius;
   let offset = 0;
 
-  return segments.map((segment) => {
+  if (total === 0) {
+    return { total: 0, donutSegments: [] };
+  }
+
+  const donutSegments = segments.map((segment) => {
     const length = (segment.value / total) * circumference;
     const item = {
       ...segment,
@@ -22,11 +24,13 @@ function buildSegments() {
     offset += length;
     return item;
   });
+
+  return { total, donutSegments };
 }
 
-const donutSegments = buildSegments();
+export function AssetDonutChart({ segments }: AssetDonutChartProps) {
+  const { total, donutSegments } = buildSegments(segments);
 
-export function AssetDonutChart() {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-5">
@@ -38,19 +42,30 @@ export function AssetDonutChart() {
         <div className="relative h-[140px] w-[140px] shrink-0">
           <svg width="140" height="140" viewBox="0 0 140 140">
             <g transform="rotate(-90 70 70)">
-              {donutSegments.map((segment) => (
+              {donutSegments.length > 0 ? (
+                donutSegments.map((segment) => (
+                  <circle
+                    key={segment.label}
+                    cx="70"
+                    cy="70"
+                    r={50}
+                    fill="none"
+                    stroke={segment.color}
+                    strokeWidth="22"
+                    strokeDasharray={segment.dasharray}
+                    strokeDashoffset={-segment.offset}
+                  />
+                ))
+              ) : (
                 <circle
-                  key={segment.label}
                   cx="70"
                   cy="70"
-                  r={radius}
+                  r={50}
                   fill="none"
-                  stroke={segment.color}
+                  stroke="#E2E8F0"
                   strokeWidth="22"
-                  strokeDasharray={segment.dasharray}
-                  strokeDashoffset={-segment.offset}
                 />
-              ))}
+              )}
             </g>
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -73,7 +88,9 @@ export function AssetDonutChart() {
                 <span className="text-slate-700">{segment.label}</span>
               </div>
               <span className="font-mono text-xs text-slate-500">
-                {Math.round((segment.value / total) * 100)}%
+                {total > 0
+                  ? `${Math.round((segment.value / total) * 100)}%`
+                  : '0%'}
               </span>
             </div>
           ))}
