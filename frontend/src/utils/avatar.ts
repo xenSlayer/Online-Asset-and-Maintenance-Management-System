@@ -1,10 +1,4 @@
-const AVATAR_COLORS = [
-  'bg-indigo-500',
-  'bg-blue-500',
-  'bg-emerald-500',
-  'bg-purple-500',
-  'bg-pink-500',
-];
+const AVATAR_COLORS = ['#4F46E5', '#2563EB', '#059669', '#7C3AED', '#DB2777'];
 
 export function getInitials(name: string): string {
   return name
@@ -16,8 +10,6 @@ export function getInitials(name: string): string {
 }
 
 export function getAvatarColor(name: string): string {
-  const index =
-    name.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) %
-    AVATAR_COLORS.length;
+  const index = name.charCodeAt(0) % AVATAR_COLORS.length;
   return AVATAR_COLORS[index];
 }

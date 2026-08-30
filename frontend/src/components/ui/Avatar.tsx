@@ -13,7 +13,8 @@ const sizeClasses = {
 export function Avatar({ name, size = 'md' }: AvatarProps) {
   return (
     <div
-      className={`flex shrink-0 items-center justify-center rounded-full font-bold text-white ${getAvatarColor(name)} ${sizeClasses[size]}`}
+      className={`flex shrink-0 items-center justify-center rounded-full font-bold text-white ${sizeClasses[size]}`}
+      style={{ backgroundColor: getAvatarColor(name) }}
     >
       {getInitials(name)}
     </div>

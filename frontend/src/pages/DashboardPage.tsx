@@ -7,7 +7,7 @@ import { TechnicianAvailability } from '../components/dashboard/TechnicianAvaila
 
 export function DashboardPage() {
   return (
-    <DashboardLayout>
+    <DashboardLayout pageTitle="Dashboard">
       <div>
         <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
         <p className="mt-0.5 text-sm text-slate-500">

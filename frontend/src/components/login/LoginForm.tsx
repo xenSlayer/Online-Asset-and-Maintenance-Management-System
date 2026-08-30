@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import { setCurrentUser } from '../../utils/auth';
 import { Button, Input, Label, Logo, Select } from '../ui';
 
 const roleOptions = [
@@ -9,10 +11,15 @@ const roleOptions = [
 ];
 
 export function LoginForm() {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const role = String(formData.get('role') ?? 'ADMINISTRATOR');
+    setCurrentUser(role);
+    navigate('/dashboard');
   };
 
   return (
