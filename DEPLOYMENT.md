@@ -122,11 +122,12 @@ Use a **pooled** connection string for serverless if your provider offers one.
 
 | Setting | Value |
 |---------|-------|
-| **Root Directory** | **Leave empty** (repository root — not `frontend`) |
-| **Build Command** | From `vercel.json` (auto) |
-| **Output Directory** | `frontend/dist` |
+| **Root Directory** | `frontend` |
+| **Include source files outside Root Directory** | **Enabled** (Settings → General) |
+| **Build / Output** | From `frontend/vercel.json` (auto) |
+| **Output Directory** | `dist` |
 
-> **Important:** If Root Directory is set to `frontend`, the build will fail because the API (`api/`) and backend live at the repo root. In Vercel → Project → Settings → General → Root Directory, clear the field or set it to `.`.
+The API lives at `frontend/api/index.ts` and imports the Express app from `../backend`. Vercel must be allowed to access files outside the `frontend` folder during the build.
 
 ---
 
