@@ -1,19 +1,21 @@
-import { useState, type ReactNode } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
+import type { Asset } from '../../types/asset';
 import type { RequestPriority } from '../../types/maintenanceRequest';
 import { getCurrentUser } from '../../utils/auth';
 import { PriorityBadge } from './PriorityBadge';
 
 interface RequestFormProps {
+  assets: Asset[];
+  saving?: boolean;
+  error?: string;
   onCancel: () => void;
-  onSubmit: () => void;
+  onSubmit: (input: {
+    assetId: string;
+    description: string;
+    priority: RequestPriority;
+    requestDate: string;
+  }) => Promise<void>;
 }
-
-const assetOptions = [
-  { value: 'AST-001', label: 'HVAC Unit 3 (AST-001)' },
-  { value: 'AST-002', label: 'Forklift #7 (AST-002)' },
-  { value: 'AST-003', label: 'Server Rack A (AST-003)' },
-  { value: 'AST-004', label: 'Printer B2 (AST-004)' },
-];
 
 const priorities: RequestPriority[] = ['Low', 'Medium', 'High', 'Critical'];
 
@@ -28,9 +30,39 @@ function FieldLabel({ children }: { children: ReactNode }) {
   );
 }
 
-export function RequestForm({ onCancel, onSubmit }: RequestFormProps) {
+export function RequestForm({
+  assets,
+  saving = false,
+  error,
+  onCancel,
+  onSubmit,
+}: RequestFormProps) {
   const currentUser = getCurrentUser();
+  const today = new Date().toISOString().slice(0, 10);
+  const [assetId, setAssetId] = useState(assets[0]?.id ?? '');
+  const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<RequestPriority>('Medium');
+  const [requestDate, setRequestDate] = useState(today);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!assetId) {
+      return;
+    }
+
+    try {
+      await onSubmit({
+        assetId,
+        description,
+        priority,
+        requestDate,
+      });
+    } catch {
+      // Error is handled by the parent form state.
+    }
+  };
+
   return (
     <div>
       <button
@@ -50,35 +82,57 @@ export function RequestForm({ onCancel, onSubmit }: RequestFormProps) {
         </p>
       </div>
 
-      <div className="max-w-2xl rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <form
+        onSubmit={handleSubmit}
+        className="max-w-2xl rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+      >
+        {error && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {error}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <FieldLabel>Request ID</FieldLabel>
-            <input
-              type="text"
-              defaultValue="Auto-generated"
-              readOnly
-              className={`${inputClass} cursor-not-allowed bg-slate-50 text-slate-500`}
-            />
+            <FieldLabel>Asset</FieldLabel>
+            <select
+              value={assetId}
+              onChange={(event) => setAssetId(event.target.value)}
+              className={inputClass}
+              required
+            >
+              {assets.length === 0 ? (
+                <option value="">No assets available</option>
+              ) : (
+                assets.map((asset) => (
+                  <option key={asset.id} value={asset.id}>
+                    {asset.name} ({asset.id})
+                  </option>
+                ))
+              )}
+            </select>
           </div>
 
           <div>
-            <FieldLabel>Asset</FieldLabel>
-            <select className={inputClass} defaultValue="AST-001">
-              {assetOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            <FieldLabel>Request Date</FieldLabel>
+            <input
+              type="date"
+              value={requestDate}
+              onChange={(event) => setRequestDate(event.target.value)}
+              className={inputClass}
+              required
+            />
           </div>
 
           <div className="sm:col-span-2">
             <FieldLabel>Issue Description</FieldLabel>
             <textarea
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
               placeholder="Describe the issue in detail…"
               rows={3}
               className={`${inputClass} h-24 resize-none`}
+              required
             />
           </div>
 
@@ -101,15 +155,10 @@ export function RequestForm({ onCancel, onSubmit }: RequestFormProps) {
           </div>
 
           <div>
-            <FieldLabel>Request Date</FieldLabel>
-            <input type="date" className={inputClass} />
-          </div>
-
-          <div>
             <FieldLabel>Submitted By</FieldLabel>
             <input
               type="text"
-              defaultValue={currentUser?.name ?? ''}
+              value={currentUser?.name ?? ''}
               readOnly
               className={`${inputClass} cursor-not-allowed bg-slate-50 text-slate-500`}
             />
@@ -117,23 +166,22 @@ export function RequestForm({ onCancel, onSubmit }: RequestFormProps) {
 
           <div>
             <FieldLabel>Request Status</FieldLabel>
-            <select
-              defaultValue="Pending"
-              disabled
+            <input
+              type="text"
+              value="Pending"
+              readOnly
               className={`${inputClass} cursor-not-allowed bg-slate-50 text-slate-500`}
-            >
-              <option value="Pending">Pending</option>
-            </select>
+            />
           </div>
         </div>
 
         <div className="mt-6 flex gap-3 border-t border-slate-100 pt-4">
           <button
-            type="button"
-            onClick={onSubmit}
-            className="btn-primary-gradient rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:opacity-90 active:scale-[0.98]"
+            type="submit"
+            disabled={saving || assets.length === 0}
+            className="btn-primary-gradient rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
           >
-            Submit Request
+            {saving ? 'Submitting…' : 'Submit Request'}
           </button>
           <button
             type="button"
@@ -143,7 +191,7 @@ export function RequestForm({ onCancel, onSubmit }: RequestFormProps) {
             Cancel
           </button>
         </div>
-      </div>
+      </form>
     </div>
   );
 }

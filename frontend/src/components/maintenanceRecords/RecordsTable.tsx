@@ -4,6 +4,7 @@ import { getInitials } from '../../utils/avatar';
 
 interface RecordsTableProps {
   records: MaintenanceRecord[];
+  totalRecords?: number;
 }
 
 function TechnicianCell({
@@ -26,7 +27,7 @@ function TechnicianCell({
   );
 }
 
-export function RecordsTable({ records }: RecordsTableProps) {
+export function RecordsTable({ records, totalRecords }: RecordsTableProps) {
   return (
     <div className="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       <div className="overflow-x-auto">
@@ -53,7 +54,17 @@ export function RecordsTable({ records }: RecordsTableProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {records.map((record) => (
+            {records.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={8}
+                  className="px-5 py-12 text-center text-sm text-slate-500"
+                >
+                  No maintenance records found.
+                </td>
+              </tr>
+            ) : (
+              records.map((record) => (
               <tr
                 key={record.id}
                 className="transition-colors hover:bg-slate-50"
@@ -97,14 +108,15 @@ export function RecordsTable({ records }: RecordsTableProps) {
                   {record.costDisplay}
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
       <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3">
         <p className="text-xs text-slate-400">
-          Showing {records.length} of 89 records
+          Showing {records.length} of {totalRecords ?? records.length} records
         </p>
         <div className="flex gap-2">
           <button

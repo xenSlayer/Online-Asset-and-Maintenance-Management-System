@@ -1,10 +1,24 @@
-const summaryCards = [
-  { label: 'Total Records', value: '89', color: '#4F46E5' },
-  { label: 'Total Repair Cost (YTD)', value: '$12,480', color: '#059669' },
-  { label: 'Avg Cost per Record', value: '$140', color: '#2563EB' },
-];
+interface RecordsSummaryCardsProps {
+  totalRecords: number;
+  totalCostYtdDisplay: string;
+  avgCostDisplay: string;
+}
 
-export function RecordsSummaryCards() {
+export function RecordsSummaryCards({
+  totalRecords,
+  totalCostYtdDisplay,
+  avgCostDisplay,
+}: RecordsSummaryCardsProps) {
+  const summaryCards = [
+    { label: 'Total Records', value: String(totalRecords), color: '#4F46E5' },
+    {
+      label: 'Total Repair Cost (YTD)',
+      value: totalCostYtdDisplay,
+      color: '#059669',
+    },
+    { label: 'Avg Cost per Record', value: avgCostDisplay, color: '#2563EB' },
+  ];
+
   return (
     <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
       {summaryCards.map((card) => (

@@ -1,6 +1,5 @@
-import { useMemo, useState } from 'react';
-import { maintenanceRecords as initialRecords } from '../data/maintenanceRecords';
-import { DashboardLayout } from '../layouts/DashboardLayout';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { fetchMaintenanceRecords } from '../api/maintenanceRecords';
 import { MonthlyCostChart } from '../components/maintenanceRecords/MonthlyCostChart';
 import {
   RecordSearchFilter,
@@ -8,13 +7,47 @@ import {
 } from '../components/maintenanceRecords/RecordSearchFilter';
 import { RecordsSummaryCards } from '../components/maintenanceRecords/RecordsSummaryCards';
 import { RecordsTable } from '../components/maintenanceRecords/RecordsTable';
+import { DashboardLayout } from '../layouts/DashboardLayout';
+import type { MaintenanceRecord } from '../types/maintenanceRecord';
 
 export function MaintenanceRecordsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [assetFilter, setAssetFilter] = useState<AssetFilter>('All Assets');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
-  const [records] = useState(initialRecords);
+  const [records, setRecords] = useState<MaintenanceRecord[]>([]);
+  const [assetNames, setAssetNames] = useState<string[]>([]);
+  const [summary, setSummary] = useState({
+    totalRecords: 0,
+    totalCostYtdDisplay: '$0',
+    avgCostDisplay: '$0',
+  });
+  const [chartData, setChartData] = useState<{ month: string; value: number }[]>(
+    [],
+  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadRecords = useCallback(async () => {
+    try {
+      const data = await fetchMaintenanceRecords();
+      setRecords(data.records);
+      setAssetNames(data.assetNames);
+      setSummary(data.summary);
+      setChartData(data.chartData);
+      setError('');
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to load maintenance records',
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadRecords();
+  }, [loadRecords]);
 
   const filteredRecords = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -54,22 +87,44 @@ export function MaintenanceRecordsPage() {
         </button>
       </div>
 
-      <RecordsSummaryCards />
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {error}
+        </div>
+      )}
 
-      <RecordSearchFilter
-        searchQuery={searchQuery}
-        assetFilter={assetFilter}
-        fromDate={fromDate}
-        toDate={toDate}
-        onSearchChange={setSearchQuery}
-        onAssetFilterChange={setAssetFilter}
-        onFromDateChange={setFromDate}
-        onToDateChange={setToDate}
-      />
+      {loading ? (
+        <div className="rounded-xl border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
+          <p className="text-sm text-slate-500">Loading records…</p>
+        </div>
+      ) : (
+        <>
+          <RecordsSummaryCards
+            totalRecords={summary.totalRecords}
+            totalCostYtdDisplay={summary.totalCostYtdDisplay}
+            avgCostDisplay={summary.avgCostDisplay}
+          />
 
-      <RecordsTable records={filteredRecords} />
+          <RecordSearchFilter
+            searchQuery={searchQuery}
+            assetFilter={assetFilter}
+            assetOptions={assetNames}
+            fromDate={fromDate}
+            toDate={toDate}
+            onSearchChange={setSearchQuery}
+            onAssetFilterChange={setAssetFilter}
+            onFromDateChange={setFromDate}
+            onToDateChange={setToDate}
+          />
 
-      <MonthlyCostChart />
+          <RecordsTable
+            records={filteredRecords}
+            totalRecords={records.length}
+          />
+
+          <MonthlyCostChart chartData={chartData} />
+        </>
+      )}
     </DashboardLayout>
   );
 }

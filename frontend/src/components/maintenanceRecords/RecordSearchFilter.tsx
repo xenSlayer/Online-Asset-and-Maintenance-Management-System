@@ -1,15 +1,11 @@
 import { Search } from 'lucide-react';
 
-export type AssetFilter =
-  | 'All Assets'
-  | 'HVAC Unit 3'
-  | 'Forklift #7'
-  | 'Server Rack A'
-  | 'Generator G1';
+export type AssetFilter = 'All Assets' | string;
 
 interface RecordSearchFilterProps {
   searchQuery: string;
   assetFilter: AssetFilter;
+  assetOptions: string[];
   fromDate: string;
   toDate: string;
   onSearchChange: (value: string) => void;
@@ -18,20 +14,13 @@ interface RecordSearchFilterProps {
   onToDateChange: (value: string) => void;
 }
 
-const assetOptions: AssetFilter[] = [
-  'All Assets',
-  'HVAC Unit 3',
-  'Forklift #7',
-  'Server Rack A',
-  'Generator G1',
-];
-
 const inputClass =
   'w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 transition-all focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100';
 
 export function RecordSearchFilter({
   searchQuery,
   assetFilter,
+  assetOptions,
   fromDate,
   toDate,
   onSearchChange,
@@ -72,6 +61,7 @@ export function RecordSearchFilter({
             }
             className={inputClass}
           >
+            <option value="All Assets">All Assets</option>
             {assetOptions.map((option) => (
               <option key={option} value={option}>
                 {option}

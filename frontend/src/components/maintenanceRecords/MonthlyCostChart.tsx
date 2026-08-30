@@ -1,4 +1,11 @@
-import { chartData } from '../../data/maintenanceRecords';
+interface ChartPoint {
+  month: string;
+  value: number;
+}
+
+interface MonthlyCostChartProps {
+  chartData: ChartPoint[];
+}
 
 const padTop = 10;
 const padRight = 10;
@@ -9,25 +16,43 @@ const height = 120;
 const innerWidth = width - padLeft - padRight;
 const innerHeight = height - padTop - padBottom;
 
-const min = 980;
-const max = 2480;
+export function MonthlyCostChart({ chartData }: MonthlyCostChartProps) {
+  if (chartData.length === 0) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 className="mb-2 text-sm font-bold text-slate-800">
+          Monthly Repair Cost Trend
+        </h3>
+        <p className="text-sm text-slate-500">No cost data available yet.</p>
+      </div>
+    );
+  }
 
-function getPoint(index: number, value: number) {
-  const x = padLeft + (index / (chartData.length - 1)) * innerWidth;
-  const y =
-    padTop + innerHeight - ((value - min) / (max - min)) * innerHeight;
-  return { x, y };
-}
+  const values = chartData.map((item) => item.value);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
 
-const points = chartData.map((item, index) => getPoint(index, item.value));
-const linePath = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
-const areaPath = `${linePath} L ${points[points.length - 1].x} ${padTop + innerHeight} L ${points[0].x} ${padTop + innerHeight} Z`;
+  function getPoint(index: number, value: number) {
+    const x =
+      padLeft +
+      (chartData.length === 1
+        ? innerWidth / 2
+        : (index / (chartData.length - 1)) * innerWidth);
+    const y = padTop + innerHeight - ((value - min) / range) * innerHeight;
+    return { x, y };
+  }
 
-const guideYs = [0, 0.5, 1].map(
-  (ratio) => padTop + innerHeight - ratio * innerHeight,
-);
+  const points = chartData.map((item, index) => getPoint(index, item.value));
+  const linePath = points
+    .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
+    .join(' ');
+  const areaPath = `${linePath} L ${points[points.length - 1].x} ${padTop + innerHeight} L ${points[0].x} ${padTop + innerHeight} Z`;
 
-export function MonthlyCostChart() {
+  const guideYs = [0, 0.5, 1].map(
+    (ratio) => padTop + innerHeight - ratio * innerHeight,
+  );
+
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <h3 className="mb-5 text-sm font-bold text-slate-800">
