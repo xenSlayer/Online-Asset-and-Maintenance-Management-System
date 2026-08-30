@@ -2,8 +2,9 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AssetsPage } from './pages/AssetsPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
-import { PlaceholderPage } from './pages/PlaceholderPage';
+import { MaintenanceRecordsPage } from './pages/MaintenanceRecordsPage';
 import { MaintenanceRequestsPage } from './pages/MaintenanceRequestsPage';
+import { TechniciansPage } from './pages/TechniciansPage';
 import { UsersPage } from './pages/UsersPage';
 
 function App() {
@@ -19,13 +20,10 @@ function App() {
           path="/maintenance-requests"
           element={<MaintenanceRequestsPage />}
         />
-        <Route
-          path="/technicians"
-          element={<PlaceholderPage title="Technicians" />}
-        />
+        <Route path="/technicians" element={<TechniciansPage />} />
         <Route
           path="/maintenance-records"
-          element={<PlaceholderPage title="Maintenance Records" />}
+          element={<MaintenanceRecordsPage />}
         />
       </Routes>
     </BrowserRouter>
