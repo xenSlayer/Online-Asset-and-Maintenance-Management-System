@@ -1,5 +1,11 @@
 export type TechnicianAvailability = 'Available' | 'On Assignment';
 
+export interface TechnicianTask {
+  id: string;
+  assetName: string;
+  status: 'Pending' | 'Assigned' | 'In Progress' | 'Completed';
+}
+
 export interface Technician {
   id: string;
   name: string;
@@ -9,4 +15,8 @@ export interface Technician {
   email: string;
   phone: string;
   avatarColor: string;
+}
+
+export interface TechnicianDetail extends Technician {
+  tasks: TechnicianTask[];
 }

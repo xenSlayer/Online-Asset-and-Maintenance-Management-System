@@ -15,7 +15,12 @@ export function TechnicianList({
 }: TechnicianListProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      {technicians.map((technician) => {
+      {technicians.length === 0 ? (
+        <p className="px-4 py-8 text-center text-sm text-slate-400">
+          No technicians found. Add a user with the Technician role.
+        </p>
+      ) : (
+        technicians.map((technician) => {
         const isSelected = technician.id === selectedId;
 
         return (
@@ -42,7 +47,8 @@ export function TechnicianList({
             <AvailabilityDot availability={technician.availability} />
           </button>
         );
-      })}
+      })
+      )}
     </div>
   );
 }

@@ -36,21 +36,13 @@ export function AssetDetail({ asset, onBack, onEdit }: AssetDetailProps) {
             {asset.id} · {asset.category}
           </p>
         </div>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onEdit}
-            className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
-          >
-            Edit Asset
-          </button>
-          <button
-            type="button"
-            className="btn-primary-gradient rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:opacity-90 active:scale-[0.98]"
-          >
-            + Raise Request
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onEdit}
+          className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+        >
+          Edit Asset
+        </button>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

@@ -98,8 +98,20 @@ export async function postAsset(req: Request, res: Response) {
 
 export async function putAsset(req: Request, res: Response) {
   try {
-    const id = parseAssetId(String(req.params.id));
-    const asset = await updateAsset(id, req.body);
+    const id = parseAssetId(decodeURIComponent(String(req.params.id)));
+    const { name, category, serialNo, description, location, purchaseDate, status, assignedTo } =
+      req.body;
+
+    const asset = await updateAsset(id, {
+      name,
+      category,
+      serialNo,
+      description,
+      location,
+      purchaseDate,
+      status,
+      assignedTo,
+    });
 
     res.status(200).json({
       success: true,

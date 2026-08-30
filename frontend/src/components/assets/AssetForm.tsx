@@ -80,7 +80,8 @@ export function AssetForm({
       return;
     }
 
-    await onSave({
+    try {
+      await onSave({
       name,
       category,
       serialNo,
@@ -89,7 +90,10 @@ export function AssetForm({
       purchaseDate,
       status,
       assignedTo,
-    });
+      });
+    } catch {
+      // Error is handled by the parent form state.
+    }
   };
 
   return (

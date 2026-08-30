@@ -12,6 +12,36 @@ const kiranUser = {
   status: 'Active',
 };
 
+const technicians = [
+  {
+    name: 'James Okafor',
+    email: 'james@assetcore.com',
+    password: 'password123',
+    role: 'TECHNICIAN',
+    specialisation: 'Electrical',
+    phone: '+1 555 0201',
+    status: 'Active',
+  },
+  {
+    name: 'Maria Santos',
+    email: 'maria@assetcore.com',
+    password: 'password123',
+    role: 'TECHNICIAN',
+    specialisation: 'Mechanical',
+    phone: '+1 555 0202',
+    status: 'Active',
+  },
+  {
+    name: 'David Chen',
+    email: 'david@assetcore.com',
+    password: 'password123',
+    role: 'TECHNICIAN',
+    specialisation: 'HVAC',
+    phone: '+1 555 0203',
+    status: 'Active',
+  },
+];
+
 const assets = [
   {
     assetName: 'HVAC Unit 3',
@@ -36,17 +66,6 @@ const assets = [
     assignedTo: 'Warehouse Team',
   },
   {
-    assetName: 'Server Rack A',
-    category: 'IT Equipment',
-    serialNo: 'SR-0011-A',
-    description:
-      'Primary server rack hosting core infrastructure and application services.',
-    location: 'Data Centre',
-    purchaseDate: new Date('2020-11-22'),
-    status: 'Operational',
-    assignedTo: 'IT Dept',
-  },
-  {
     assetName: 'Printer B2',
     category: 'Office Equipment',
     serialNo: 'PR-8821-B',
@@ -55,37 +74,6 @@ const assets = [
     purchaseDate: new Date('2022-02-09'),
     status: 'Operational',
     assignedTo: 'Admin',
-  },
-  {
-    assetName: 'Generator G1',
-    category: 'Electrical',
-    serialNo: 'GN-5590-G',
-    description:
-      'Backup diesel generator for Building C. Currently offline pending electrical inspection.',
-    location: 'Building C',
-    purchaseDate: new Date('2018-06-17'),
-    status: 'Out of Service',
-    assignedTo: 'Facilities',
-  },
-  {
-    assetName: 'Conference Projector',
-    category: 'Office Equipment',
-    serialNo: 'PJ-2201-C',
-    description: '4K projector for main conference room.',
-    location: 'Floor 3',
-    purchaseDate: new Date('2023-01-15'),
-    status: 'Operational',
-    assignedTo: 'Admin',
-  },
-  {
-    assetName: 'Loading Dock Scale',
-    category: 'Mechanical',
-    serialNo: 'SC-7788-L',
-    description: 'Industrial weighing scale at loading dock.',
-    location: 'Warehouse A',
-    purchaseDate: new Date('2017-09-20'),
-    status: 'Retired',
-    assignedTo: 'Warehouse Team',
   },
 ];
 
@@ -108,6 +96,27 @@ async function main() {
     },
   });
 
+  const technicianMap = new Map<string, number>();
+
+  for (const technician of technicians) {
+    const record = await prisma.user.create({
+      data: {
+        name: technician.name,
+        email: technician.email,
+        password: await bcrypt.hash(technician.password, 10),
+        role: technician.role,
+        specialisation: technician.specialisation,
+        phone: technician.phone,
+        status: technician.status,
+      },
+    });
+
+    technicianMap.set(technician.email, record.id);
+  }
+
+  const jamesId = technicianMap.get('james@assetcore.com')!;
+  const mariaId = technicianMap.get('maria@assetcore.com')!;
+
   const assetMap = new Map<string, number>();
 
   for (const asset of assets) {
@@ -119,20 +128,20 @@ async function main() {
     {
       description: 'Compressor making unusual noise',
       priority: 'High',
-      status: 'Pending',
+      status: 'Assigned',
       requestDate: new Date('2026-07-28'),
       userId: kiran.id,
       assetId: assetMap.get('HVAC Unit 3')!,
-      assignedTechnicianId: null,
+      assignedTechnicianId: jamesId,
     },
     {
       description: 'Paper feed jam not resolving',
       priority: 'Medium',
-      status: 'Assigned',
+      status: 'In Progress',
       requestDate: new Date('2026-07-25'),
       userId: kiran.id,
       assetId: assetMap.get('Printer B2')!,
-      assignedTechnicianId: null,
+      assignedTechnicianId: jamesId,
     },
     {
       description: 'Brake pad worn, requires replacement',
@@ -141,7 +150,7 @@ async function main() {
       requestDate: new Date('2026-07-18'),
       userId: kiran.id,
       assetId: assetMap.get('Forklift #7')!,
-      assignedTechnicianId: null,
+      assignedTechnicianId: mariaId,
     },
   ];
 
@@ -155,7 +164,7 @@ async function main() {
   await prisma.maintenanceRecord.create({
     data: {
       requestId: createdRequests[2].id,
-      technicianId: kiran.id,
+      technicianId: mariaId,
       repairDescription: 'Brake pad replacement and brake fluid top-up',
       repairDate: new Date('2026-07-20'),
       cost: 185.5,
@@ -163,7 +172,7 @@ async function main() {
     },
   });
 
-  console.log('Seeded Kiran Paudel and demo data');
+  console.log('Seeded admin, technicians, assets, and maintenance data');
 }
 
 main()

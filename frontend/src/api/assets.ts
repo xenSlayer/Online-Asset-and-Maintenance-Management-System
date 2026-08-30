@@ -39,7 +39,7 @@ export async function fetchAssets(): Promise<Asset[]> {
 }
 
 export async function fetchAsset(id: string): Promise<Asset> {
-  const response = await fetch(`/api/assets/${id}`, {
+  const response = await fetch(`/api/assets/${encodeURIComponent(id)}`, {
     headers: authHeaders(),
   });
 
@@ -71,7 +71,7 @@ export async function updateAsset(
   id: string,
   input: Partial<SaveAssetInput>,
 ): Promise<Asset> {
-  const response = await fetch(`/api/assets/${id}`, {
+  const response = await fetch(`/api/assets/${encodeURIComponent(id)}`, {
     method: 'PUT',
     headers: authHeaders(),
     body: JSON.stringify(input),

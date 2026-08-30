@@ -31,6 +31,7 @@ export function AssetsPage() {
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState('');
   const [formError, setFormError] = useState('');
 
@@ -73,14 +74,25 @@ export function AssetsPage() {
     setEditingAsset(null);
     setSelectedAsset(null);
     setFormError('');
+    setFormLoading(false);
     setView('form');
   };
 
-  const openEditForm = (asset: Asset) => {
-    setEditingAsset(asset);
-    setSelectedAsset(asset);
+  const openEditForm = async (asset: Asset) => {
     setFormError('');
+    setFormLoading(true);
     setView('form');
+
+    try {
+      const detail = await fetchAsset(asset.id);
+      setEditingAsset(detail);
+      setSelectedAsset(detail);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Failed to load asset');
+      setView('list');
+    } finally {
+      setFormLoading(false);
+    }
   };
 
   const openDetail = async (asset: Asset) => {
@@ -187,8 +199,15 @@ export function AssetsPage() {
         </>
       )}
 
-      {view === 'form' && (
+      {view === 'form' && formLoading && (
+        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+          Loading asset…
+        </div>
+      )}
+
+      {view === 'form' && !formLoading && (
         <AssetForm
+          key={editingAsset?.id ?? 'new'}
           asset={editingAsset}
           saving={saving}
           error={formError}
