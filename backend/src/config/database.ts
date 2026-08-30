@@ -1,6 +1,12 @@
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+const prisma = globalForPrisma.prisma ?? new PrismaClient();
+
+globalForPrisma.prisma = prisma;
 
 export async function connectDatabase(): Promise<void> {
   try {
@@ -8,7 +14,12 @@ export async function connectDatabase(): Promise<void> {
     console.log('Database connected');
   } catch (error) {
     console.error('Database connection failed:', error);
-    process.exit(1);
+
+    if (!process.env.VERCEL) {
+      process.exit(1);
+    }
+
+    throw error;
   }
 }
 
