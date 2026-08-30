@@ -86,6 +86,15 @@ function getRoleFilter(auth: AuthPayload) {
   return { userId: -1 };
 }
 
+function canManageRequestWork(
+  auth: AuthPayload,
+  assignedTechnicianId: number | null,
+) {
+  return (
+    auth.role === 'TECHNICIAN' && assignedTechnicianId === auth.userId
+  );
+}
+
 export async function listMaintenanceRequests(auth: AuthPayload) {
   const requests = await prisma.maintenanceRequest.findMany({
     where: {
@@ -216,12 +225,25 @@ export async function assignMaintenanceRequest(
   const normalizedTechnicianId = technicianId?.trim() || null;
 
   if (!normalizedTechnicianId) {
-    const request = await prisma.maintenanceRequest.update({
+    await prisma.$transaction(async (tx) => {
+      await tx.maintenanceRequest.update({
+        where: { id },
+        data: {
+          assignedTechnicianId: null,
+          status: 'Pending',
+        },
+      });
+
+      if (existing.status === 'In Progress') {
+        await tx.asset.update({
+          where: { id: existing.assetId },
+          data: { status: 'Operational' },
+        });
+      }
+    });
+
+    const request = await prisma.maintenanceRequest.findUniqueOrThrow({
       where: { id },
-      data: {
-        assignedTechnicianId: null,
-        status: 'Pending',
-      },
       include: requestInclude,
     });
 
@@ -298,10 +320,17 @@ export async function updateMaintenanceRequestProgress(
     throw new MaintenanceRequestError('Request not found', 404);
   }
 
-  if (auth.role !== 'TECHNICIAN' || existing.assignedTechnicianId !== auth.userId) {
+  if (!canManageRequestWork(auth, existing.assignedTechnicianId)) {
     throw new MaintenanceRequestError(
-      'Only the assigned technician can update this request',
+      'Only the assigned technician can start this request',
       403,
+    );
+  }
+
+  if (!existing.assignedTechnicianId) {
+    throw new MaintenanceRequestError(
+      'Request must be assigned to a technician before work can start',
+      400,
     );
   }
 
@@ -312,9 +341,20 @@ export async function updateMaintenanceRequestProgress(
     );
   }
 
-  const request = await prisma.maintenanceRequest.update({
+  await prisma.$transaction(async (tx) => {
+    await tx.maintenanceRequest.update({
+      where: { id },
+      data: { status: 'In Progress' },
+    });
+
+    await tx.asset.update({
+      where: { id: existing.assetId },
+      data: { status: 'Under Maintenance' },
+    });
+  });
+
+  const request = await prisma.maintenanceRequest.findUniqueOrThrow({
     where: { id },
-    data: { status: 'In Progress' },
     include: requestInclude,
   });
 
@@ -341,10 +381,17 @@ export async function completeMaintenanceRequest(
     throw new MaintenanceRequestError('Request not found', 404);
   }
 
-  if (auth.role !== 'TECHNICIAN' || existing.assignedTechnicianId !== auth.userId) {
+  if (!canManageRequestWork(auth, existing.assignedTechnicianId)) {
     throw new MaintenanceRequestError(
       'Only the assigned technician can complete this request',
       403,
+    );
+  }
+
+  if (!existing.assignedTechnicianId) {
+    throw new MaintenanceRequestError(
+      'Request must be assigned to a technician before it can be completed',
+      400,
     );
   }
 
@@ -359,6 +406,8 @@ export async function completeMaintenanceRequest(
     throw new MaintenanceRequestError('Request is already completed', 409);
   }
 
+  const technicianId = existing.assignedTechnicianId;
+
   await prisma.$transaction(async (tx) => {
     await tx.maintenanceRequest.update({
       where: { id },
@@ -368,13 +417,18 @@ export async function completeMaintenanceRequest(
     await tx.maintenanceRecord.create({
       data: {
         requestId: id,
-        technicianId: auth.userId,
+        technicianId,
         repairDescription:
           input.repairDescription?.trim() || existing.description,
         repairDate: new Date(),
         cost: input.cost ?? 0,
         notes: input.partsReplaced?.trim() || null,
       },
+    });
+
+    await tx.asset.update({
+      where: { id: existing.assetId },
+      data: { status: 'Operational' },
     });
   });
 

@@ -17,8 +17,43 @@ interface LoginResponse {
       id: number;
       name: string;
       email: string;
-      role: UserRole;
+      role: string;
     };
+  };
+}
+
+const ROLE_ALIASES: Record<string, UserRole> = {
+  ADMIN: 'Admin',
+  ADMINISTRATOR: 'Admin',
+  Admin: 'Admin',
+  STAFF: 'Staff',
+  STAFF_USER: 'Staff',
+  Staff: 'Staff',
+  TECHNICIAN: 'Technician',
+  Technician: 'Technician',
+};
+
+export function normalizeUserRole(role: string | undefined): UserRole | null {
+  if (!role) {
+    return null;
+  }
+
+  return ROLE_ALIASES[role] ?? ROLE_ALIASES[role.toUpperCase()] ?? null;
+}
+
+function toCurrentUser(data: NonNullable<LoginResponse['data']>): CurrentUser {
+  const role = normalizeUserRole(data.user.role);
+
+  if (!role) {
+    throw new Error('Invalid user role returned from server');
+  }
+
+  return {
+    id: data.user.id,
+    role,
+    name: data.user.name,
+    email: data.user.email,
+    token: data.token,
   };
 }
 
@@ -39,13 +74,7 @@ export async function loginRequest(
     throw new Error(data.message || 'Login failed');
   }
 
-  const user: CurrentUser = {
-    id: data.data.user.id,
-    role: data.data.user.role,
-    name: data.data.user.name,
-    email: data.data.user.email,
-    token: data.data.token,
-  };
+  const user = toCurrentUser(data.data);
 
   sessionStorage.setItem('oamms_user', JSON.stringify(user));
   return user;
@@ -61,9 +90,33 @@ export function getCurrentUser(): CurrentUser | null {
     return null;
   }
 
-  return JSON.parse(stored) as CurrentUser;
+  try {
+    const parsed = JSON.parse(stored) as Partial<CurrentUser>;
+    const role = normalizeUserRole(parsed.role);
+
+    if (!parsed.token || !role || !parsed.name || !parsed.email) {
+      return null;
+    }
+
+    return {
+      id: Number(parsed.id) || 0,
+      role,
+      name: parsed.name,
+      email: parsed.email,
+      token: parsed.token,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export function logoutUser() {
   sessionStorage.removeItem('oamms_user');
+}
+
+export function hasRole(
+  user: CurrentUser | null,
+  ...roles: UserRole[]
+): boolean {
+  return Boolean(user && roles.includes(user.role));
 }

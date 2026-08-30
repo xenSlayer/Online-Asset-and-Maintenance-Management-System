@@ -55,16 +55,19 @@ export async function getDashboardData() {
     highPriorityPending,
     completedTasks,
     technicians,
-    assetsByStatus,
+    allAssets,
+    activeMaintenanceAssetIds,
     recentRequests,
     maintenanceRequests,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.asset.count(),
-    prisma.maintenanceRequest.count({ where: { status: 'Pending' } }),
+    prisma.maintenanceRequest.count({
+      where: { status: { not: 'Completed' } },
+    }),
     prisma.maintenanceRequest.count({
       where: {
-        status: 'Pending',
+        status: { not: 'Completed' },
         priority: { in: ['High', 'Critical'] },
       },
     }),
@@ -84,9 +87,13 @@ export async function getDashboardData() {
         },
       },
     }),
-    prisma.asset.groupBy({
-      by: ['status'],
-      _count: { status: true },
+    prisma.asset.findMany({
+      select: { id: true, status: true },
+    }),
+    prisma.maintenanceRequest.findMany({
+      where: { status: { not: 'Completed' } },
+      select: { assetId: true },
+      distinct: ['assetId'],
     }),
     prisma.maintenanceRequest.findMany({
       take: 4,
@@ -100,6 +107,36 @@ export async function getDashboardData() {
       select: { requestDate: true },
     }),
   ]);
+
+  const assetsUnderMaintenance = new Set(
+    activeMaintenanceAssetIds.map((request) => request.assetId),
+  );
+
+  const assetStatusCounts = new Map<string, number>();
+
+  for (const asset of allAssets) {
+    let chartStatus = asset.status;
+
+    if (
+      assetsUnderMaintenance.has(asset.id) &&
+      chartStatus === 'Operational'
+    ) {
+      chartStatus = 'Under Maintenance';
+    }
+
+    assetStatusCounts.set(
+      chartStatus,
+      (assetStatusCounts.get(chartStatus) ?? 0) + 1,
+    );
+  }
+
+  const assetStatusBreakdown = [...assetStatusCounts.entries()]
+    .map(([label, value]) => ({
+      label,
+      value,
+      color: ASSET_STATUS_COLORS[label] ?? '#94A3B8',
+    }))
+    .sort((a, b) => b.value - a.value);
 
   const techniciansOnAssignment = technicians.filter(
     (technician) => technician.assignedRequests.length > 0,
@@ -130,12 +167,6 @@ export async function getDashboardData() {
   const firstMonth = monthBuckets[0]?.label ?? '';
   const lastMonth = monthBuckets[monthBuckets.length - 1]?.label ?? '';
   const currentYear = new Date().getFullYear();
-
-  const assetStatusBreakdown = assetsByStatus.map((group) => ({
-    label: group.status,
-    value: group._count.status,
-    color: ASSET_STATUS_COLORS[group.status] ?? '#94A3B8',
-  }));
 
   const quarterStart = getQuarterStart();
   const completedThisQuarter = await prisma.maintenanceRequest.count({

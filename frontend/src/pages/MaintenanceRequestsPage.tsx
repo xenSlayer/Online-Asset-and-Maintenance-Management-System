@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { fetchAssets } from '../api/assets';
 import {
   assignMaintenanceRequest,
@@ -16,6 +17,7 @@ import { DashboardLayout } from '../layouts/DashboardLayout';
 import type { Asset } from '../types/asset';
 import type { MaintenanceRequest, StatusTab } from '../types/maintenanceRequest';
 import type { Technician } from '../types/technician';
+import type { UserRole } from '../utils/auth';
 import { getCurrentUser } from '../utils/auth';
 
 type View = 'list' | 'form';
@@ -24,7 +26,43 @@ function isUnassigned(request: MaintenanceRequest) {
   return !request.assignedTechnicianId && !request.assignedTechnician;
 }
 
-function getTabCounts(requests: MaintenanceRequest[]) {
+function getTabCounts(requests: MaintenanceRequest[], role: UserRole) {
+  const assignedCount = requests.filter(
+    (request) => request.status === 'Assigned',
+  ).length;
+  const inProgressCount = requests.filter(
+    (request) => request.status === 'In Progress',
+  ).length;
+
+  if (role === 'Technician') {
+    return [
+      { key: 'all' as const, label: 'My Tasks', count: requests.length },
+      { key: 'Assigned' as const, label: 'Assigned', count: assignedCount },
+      {
+        key: 'In Progress' as const,
+        label: 'In Progress',
+        count: inProgressCount,
+      },
+    ];
+  }
+
+  if (role === 'Staff') {
+    return [
+      { key: 'all' as const, label: 'My Requests', count: requests.length },
+      {
+        key: 'unassigned' as const,
+        label: 'Unassigned',
+        count: requests.filter(isUnassigned).length,
+      },
+      { key: 'Assigned' as const, label: 'Assigned', count: assignedCount },
+      {
+        key: 'In Progress' as const,
+        label: 'In Progress',
+        count: inProgressCount,
+      },
+    ];
+  }
+
   return [
     { key: 'all' as const, label: 'All Requests', count: requests.length },
     {
@@ -32,18 +70,31 @@ function getTabCounts(requests: MaintenanceRequest[]) {
       label: 'Unassigned',
       count: requests.filter(isUnassigned).length,
     },
-    {
-      key: 'Assigned' as const,
-      label: 'Assigned',
-      count: requests.filter((request) => request.status === 'Assigned').length,
-    },
+    { key: 'Assigned' as const, label: 'Assigned', count: assignedCount },
     {
       key: 'In Progress' as const,
       label: 'In Progress',
-      count: requests.filter((request) => request.status === 'In Progress')
-        .length,
+      count: inProgressCount,
     },
   ];
+}
+
+function getPageCopy(role: UserRole) {
+  if (role === 'Technician') {
+    return {
+      subtitle: 'Start and complete your assigned maintenance tasks',
+    };
+  }
+
+  if (role === 'Staff') {
+    return {
+      subtitle: 'Submit and track your maintenance requests',
+    };
+  }
+
+  return {
+    subtitle: 'Assign technicians and monitor request status',
+  };
 }
 
 export function MaintenanceRequestsPage() {
@@ -66,13 +117,7 @@ export function MaintenanceRequestsPage() {
   const [completeParts, setCompleteParts] = useState('');
   const [completeDescription, setCompleteDescription] = useState('');
 
-  const currentUser = getCurrentUser() ?? {
-    id: 0,
-    role: 'Admin' as const,
-    name: 'Guest',
-    email: '',
-    token: '',
-  };
+  const currentUser = getCurrentUser();
 
   const loadRequests = useCallback(async () => {
     try {
@@ -88,25 +133,48 @@ export function MaintenanceRequestsPage() {
     }
   }, []);
 
+  const isAdmin = currentUser?.role === 'Admin';
+  const isTechnician = currentUser?.role === 'Technician';
+  const canCreateRequest =
+    currentUser?.role === 'Admin' || currentUser?.role === 'Staff';
+  const pageCopy = getPageCopy(currentUser?.role ?? 'Staff');
+
   const loadFormData = useCallback(async () => {
     try {
-      const [assetList, technicianList] = await Promise.all([
-        fetchAssets(),
-        fetchTechnicians(),
-      ]);
-      setAssets(assetList);
-      setTechnicians(technicianList);
+      if (isAdmin) {
+        const [assetList, technicianList] = await Promise.all([
+          fetchAssets(),
+          fetchTechnicians(),
+        ]);
+        setAssets(assetList);
+        setTechnicians(technicianList);
+        return;
+      }
+
+      if (canCreateRequest) {
+        const assetList = await fetchAssets();
+        setAssets(assetList);
+      }
     } catch {
       // Form-specific data; list view can still work.
     }
-  }, []);
+  }, [isAdmin, canCreateRequest]);
+
+  const tabs = useMemo(
+    () => getTabCounts(requestList, currentUser?.role ?? 'Staff'),
+    [requestList, currentUser?.role],
+  );
 
   useEffect(() => {
     loadRequests();
     loadFormData();
   }, [loadRequests, loadFormData]);
 
-  const tabs = useMemo(() => getTabCounts(requestList), [requestList]);
+  useEffect(() => {
+    if (!tabs.some((tab) => tab.key === activeTab)) {
+      setActiveTab('all');
+    }
+  }, [tabs, activeTab]);
 
   const filteredRequests = useMemo(() => {
     if (activeTab === 'all') {
@@ -119,9 +187,6 @@ export function MaintenanceRequestsPage() {
 
     return requestList.filter((request) => request.status === activeTab);
   }, [requestList, activeTab]);
-
-  const canCreateRequest =
-    currentUser.role === 'Admin' || currentUser.role === 'Staff';
 
   const handleCreate = async (input: {
     assetId: string;
@@ -193,12 +258,11 @@ export function MaintenanceRequestsPage() {
     setSelectedTechnicianId('');
   };
 
-  const handleUpdate = (request: MaintenanceRequest) => {
-    if (request.status === 'Assigned') {
-      runAction(request.id, () => progressMaintenanceRequest(request.id));
-      return;
-    }
+  const handleStartWork = (request: MaintenanceRequest) => {
+    runAction(request.id, () => progressMaintenanceRequest(request.id));
+  };
 
+  const handleComplete = (request: MaintenanceRequest) => {
     setCompletingRequest(request);
     setCompleteCost('');
     setCompleteParts('');
@@ -231,7 +295,9 @@ export function MaintenanceRequestsPage() {
 
   return (
     <DashboardLayout pageTitle="Maintenance Requests">
-      {view === 'list' ? (
+      {!currentUser ? (
+        <Navigate to="/login" replace />
+      ) : view === 'list' ? (
         <>
           <div className="mb-6 flex items-start justify-between">
             <div>
@@ -239,7 +305,7 @@ export function MaintenanceRequestsPage() {
                 Maintenance Requests
               </h1>
               <p className="mt-0.5 text-sm text-slate-500">
-                Track, assign, and resolve maintenance tasks
+                {pageCopy.subtitle}
               </p>
             </div>
             {canCreateRequest && (
@@ -263,7 +329,7 @@ export function MaintenanceRequestsPage() {
             </div>
           )}
 
-          {assigningRequest && (
+          {isAdmin && assigningRequest && (
             <div className="mb-4 rounded-xl border border-indigo-200 bg-indigo-50 p-4">
               <p className="mb-3 text-sm font-medium text-slate-800">
                 {assigningRequest.assignedTechnician
@@ -317,7 +383,7 @@ export function MaintenanceRequestsPage() {
             </div>
           )}
 
-          {completingRequest && (
+          {isTechnician && completingRequest && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
               <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl">
                 <h2 className="text-lg font-bold text-slate-900">
@@ -407,7 +473,8 @@ export function MaintenanceRequestsPage() {
               actionLoadingId={actionLoadingId}
               onReject={handleReject}
               onAssign={handleAssignClick}
-              onUpdate={handleUpdate}
+              onStartWork={handleStartWork}
+              onComplete={handleComplete}
             />
           )}
         </>

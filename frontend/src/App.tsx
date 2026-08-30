@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { RoleProtectedRoute } from './components/auth/RoleProtectedRoute';
 import { AssetsPage } from './pages/AssetsPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
@@ -26,7 +27,9 @@ function App() {
           path="/users"
           element={
             <ProtectedRoute>
-              <UsersPage />
+              <RoleProtectedRoute allowedRoles={['Admin']}>
+                <UsersPage />
+              </RoleProtectedRoute>
             </ProtectedRoute>
           }
         />
@@ -34,7 +37,9 @@ function App() {
           path="/assets"
           element={
             <ProtectedRoute>
-              <AssetsPage />
+              <RoleProtectedRoute allowedRoles={['Admin', 'Staff']}>
+                <AssetsPage />
+              </RoleProtectedRoute>
             </ProtectedRoute>
           }
         />
@@ -50,7 +55,9 @@ function App() {
           path="/technicians"
           element={
             <ProtectedRoute>
-              <TechniciansPage />
+              <RoleProtectedRoute allowedRoles={['Admin']}>
+                <TechniciansPage />
+              </RoleProtectedRoute>
             </ProtectedRoute>
           }
         />
@@ -58,7 +65,9 @@ function App() {
           path="/maintenance-records"
           element={
             <ProtectedRoute>
-              <MaintenanceRecordsPage />
+              <RoleProtectedRoute allowedRoles={['Admin', 'Staff']}>
+                <MaintenanceRecordsPage />
+              </RoleProtectedRoute>
             </ProtectedRoute>
           }
         />

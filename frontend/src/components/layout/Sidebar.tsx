@@ -1,17 +1,37 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Avatar, Logo } from '../ui';
-import { getCurrentUser, logoutUser } from '../../utils/auth';
+import { getCurrentUser, logoutUser, type UserRole } from '../../utils/auth';
 
-const navItems = [
-  { label: 'Dashboard', icon: '⊞', to: '/dashboard' },
-  { label: 'Users', icon: '👥', to: '/users' },
-  { label: 'Assets', icon: '🗄', to: '/assets' },
-  { label: 'Maintenance Requests', icon: '🔧', to: '/maintenance-requests' },
-  { label: 'Technicians', icon: '👷', to: '/technicians' },
-  { label: 'Maintenance Records', icon: '📋', to: '/maintenance-records' },
+const navItems: {
+  label: string;
+  icon: string;
+  to: string;
+  roles: UserRole[];
+}[] = [
+  {
+    label: 'Dashboard',
+    icon: '⊞',
+    to: '/dashboard',
+    roles: ['Admin', 'Staff', 'Technician'],
+  },
+  { label: 'Users', icon: '👥', to: '/users', roles: ['Admin'] },
+  { label: 'Assets', icon: '🗄', to: '/assets', roles: ['Admin', 'Staff'] },
+  {
+    label: 'Maintenance Requests',
+    icon: '🔧',
+    to: '/maintenance-requests',
+    roles: ['Admin', 'Staff', 'Technician'],
+  },
+  { label: 'Technicians', icon: '👷', to: '/technicians', roles: ['Admin'] },
+  {
+    label: 'Maintenance Records',
+    icon: '📋',
+    to: '/maintenance-records',
+    roles: ['Admin', 'Staff'],
+  },
 ];
 
-const roleLabels: Record<string, string> = {
+const roleLabels: Record<UserRole, string> = {
   Admin: 'Administrator',
   Staff: 'Staff User',
   Technician: 'Technician',
@@ -20,6 +40,9 @@ const roleLabels: Record<string, string> = {
 export function Sidebar() {
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const visibleNavItems = user
+    ? navItems.filter((item) => item.roles.includes(user.role))
+    : [];
 
   function handleSignOut() {
     logoutUser();
@@ -34,7 +57,7 @@ export function Sidebar() {
 
       <nav className="flex-1 px-3 py-3">
         <ul className="space-y-1">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <li key={item.to}>
               <NavLink
                 to={item.to}
@@ -61,7 +84,7 @@ export function Sidebar() {
           <div>
             <p className="text-xs font-bold text-white">{user?.name ?? 'User'}</p>
             <p className="text-xs text-indigo-300">
-              {user ? roleLabels[user.role] ?? user.role : 'Signed in'}
+              {user ? roleLabels[user.role] : 'Signed in'}
             </p>
           </div>
         </div>
