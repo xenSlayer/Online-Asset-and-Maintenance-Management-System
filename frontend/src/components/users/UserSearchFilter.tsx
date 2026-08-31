@@ -18,7 +18,7 @@ export function UserSearchFilter({
   return (
     <div className="mb-5 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex flex-wrap items-end gap-3">
-        <div className="min-w-[200px] flex-1">
+        <div className="min-w-0 w-full flex-1 basis-full sm:min-w-[200px] sm:basis-auto">
           <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-600">
             Search Users
           </label>
@@ -37,7 +37,7 @@ export function UserSearchFilter({
           </div>
         </div>
 
-        <div className="w-48">
+        <div className="w-full sm:w-48">
           <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-600">
             Filter by Role
           </label>

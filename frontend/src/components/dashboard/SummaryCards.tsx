@@ -116,7 +116,7 @@ export function SummaryCards({ summary }: SummaryCardsProps) {
   const cards = buildCards(summary);
 
   return (
-    <div className="mb-6 grid grid-cols-2 gap-4 xl:grid-cols-5">
+    <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
       {cards.map((card) => (
         <SummaryCard key={card.label} {...card} />
       ))}

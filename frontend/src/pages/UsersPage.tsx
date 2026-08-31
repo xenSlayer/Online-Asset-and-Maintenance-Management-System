@@ -134,7 +134,7 @@ export function UsersPage() {
     <DashboardLayout pageTitle="User Management">
       {view === 'list' ? (
         <>
-          <div className="mb-6 flex items-start justify-between">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h1 className="text-xl font-bold text-slate-900">
                 User Management

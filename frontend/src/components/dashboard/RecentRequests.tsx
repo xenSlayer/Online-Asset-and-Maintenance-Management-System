@@ -75,7 +75,7 @@ export function RecentRequests({ requests }: RecentRequestsProps) {
             return (
               <div
                 key={request.id}
-                className="flex items-center justify-between gap-4 py-3"
+                className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <div

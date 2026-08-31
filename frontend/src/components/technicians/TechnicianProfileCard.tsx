@@ -41,7 +41,7 @@ export function TechnicianProfileCard({ technician, onEdit }: TechnicianProfileC
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {infoTiles(technician).map((tile) => (
           <div key={tile.label} className="rounded-xl bg-slate-50 p-3.5">
             <p className="mb-1 text-xs uppercase tracking-wider text-slate-400">
