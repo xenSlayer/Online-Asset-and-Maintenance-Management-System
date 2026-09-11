@@ -1,9 +1,17 @@
+import type { ReactNode } from 'react';
+import {
+  CheckCircle2,
+  Clock3,
+  Package,
+  UserRound,
+  Users,
+} from 'lucide-react';
 import type { DashboardSummary } from '../../types/dashboard';
 
 interface SummaryCardProps {
   label: string;
   value: string;
-  icon: string;
+  icon: ReactNode;
   iconBg: string;
   valueColor: string;
   delta?: {
@@ -26,8 +34,8 @@ function SummaryCard({
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-4 flex items-start justify-between">
         <div
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-lg"
-          style={{ backgroundColor: iconBg }}
+          className="flex h-10 w-10 items-center justify-center rounded-xl"
+          style={{ backgroundColor: iconBg, color: valueColor }}
         >
           {icon}
         </div>
@@ -55,27 +63,27 @@ function buildCards(summary: DashboardSummary): SummaryCardProps[] {
     {
       label: 'Total Users',
       value: String(summary.totalUsers),
-      icon: '👥',
+      icon: <Users size={18} />,
       iconBg: '#EEF2FF',
       valueColor: '#4F46E5',
     },
     {
       label: 'Total Assets',
       value: String(summary.totalAssets),
-      icon: '🗄',
+      icon: <Package size={18} />,
       iconBg: '#EFF6FF',
       valueColor: '#2563EB',
     },
     {
       label: 'Pending Requests',
       value: String(summary.pendingRequests),
-      icon: '⏳',
+      icon: <Clock3 size={18} />,
       iconBg: '#FFFBEB',
       valueColor: '#D97706',
       delta:
         summary.highPriorityPending > 0
           ? {
-              text: `↓ ${summary.highPriorityPending} high priority`,
+              text: `${summary.highPriorityPending} high priority`,
               className: 'bg-red-50 text-red-500',
             }
           : undefined,
@@ -83,13 +91,13 @@ function buildCards(summary: DashboardSummary): SummaryCardProps[] {
     {
       label: 'Completed Tasks',
       value: String(summary.completedTasks),
-      icon: '✅',
+      icon: <CheckCircle2 size={18} />,
       iconBg: '#ECFDF5',
       valueColor: '#059669',
       delta:
         summary.completedThisQuarter > 0
           ? {
-              text: `↑ ${summary.completedThisQuarter} this quarter`,
+              text: `${summary.completedThisQuarter} this quarter`,
               className: 'bg-emerald-50 text-emerald-600',
             }
           : undefined,
@@ -97,7 +105,7 @@ function buildCards(summary: DashboardSummary): SummaryCardProps[] {
     {
       label: 'Available Technicians',
       value: String(summary.availableTechnicians),
-      icon: '👷',
+      icon: <UserRound size={18} />,
       iconBg: '#F5F3FF',
       valueColor: '#7C3AED',
       subtitle:

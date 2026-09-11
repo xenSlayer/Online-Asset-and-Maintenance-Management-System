@@ -45,11 +45,11 @@ export function LoginHero() {
 
       <div className="my-auto max-w-xl py-16">
         <h1 className="text-[36px] font-bold leading-tight tracking-tight">
-          Manage your assets with confidence.
+          Online Asset and Maintenance Management
         </h1>
         <p className="mt-5 text-base leading-relaxed text-indigo-200 lg:text-lg">
-          Streamline maintenance workflows, track asset lifecycles, and keep your
-          operations running smoothly.
+          Track assets, raise maintenance requests, and record completed work
+          in one place.
         </p>
 
         <div className="mt-12 grid grid-cols-3 gap-6 border-t border-white/10 pt-10">

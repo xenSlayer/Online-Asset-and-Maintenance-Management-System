@@ -8,10 +8,10 @@ interface TechnicianProfileCardProps {
 }
 
 const infoTiles = (technician: Technician) => [
-  { emoji: '🪪', label: 'Technician ID', value: technician.id },
-  { emoji: '✉', label: 'Email', value: technician.email },
-  { emoji: '📱', label: 'Phone', value: technician.phone },
-  { emoji: '🔧', label: 'Active Tasks', value: String(technician.activeTasks) },
+  { label: 'Technician ID', value: technician.id },
+  { label: 'Email', value: technician.email },
+  { label: 'Phone', value: technician.phone },
+  { label: 'Active Tasks', value: String(technician.activeTasks) },
 ];
 
 export function TechnicianProfileCard({ technician, onEdit }: TechnicianProfileCardProps) {
@@ -25,9 +25,7 @@ export function TechnicianProfileCard({ technician, onEdit }: TechnicianProfileC
         />
         <div className="flex-1">
           <h2 className="text-xl font-bold text-slate-900">{technician.name}</h2>
-          <p className="text-sm text-slate-500">
-            {technician.specialisation} Specialist
-          </p>
+          <p className="text-sm text-slate-500">{technician.specialisation}</p>
           <div className="mt-2">
             <AvailabilityBadge availability={technician.availability} />
           </div>
@@ -45,7 +43,7 @@ export function TechnicianProfileCard({ technician, onEdit }: TechnicianProfileC
         {infoTiles(technician).map((tile) => (
           <div key={tile.label} className="rounded-xl bg-slate-50 p-3.5">
             <p className="mb-1 text-xs uppercase tracking-wider text-slate-400">
-              {tile.emoji} {tile.label}
+              {tile.label}
             </p>
             <p
               className={`text-sm font-semibold text-slate-800 ${

@@ -37,9 +37,9 @@ export function LoginForm() {
         </div>
 
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-text">Welcome back</h2>
+          <h2 className="text-2xl font-bold text-text">Sign in</h2>
           <p className="mt-2 text-sm text-slate-500">
-            Sign in to your account to continue
+            Enter your email and password
           </p>
         </div>
 

@@ -25,7 +25,7 @@ interface UserFormProps {
 
 const roleOptions: { value: UserRole; label: string }[] = [
   { value: 'Admin', label: 'Administrator' },
-  { value: 'Staff', label: 'Staff / User' },
+  { value: 'Staff', label: 'Staff' },
   { value: 'Technician', label: 'Technician' },
 ];
 
@@ -50,7 +50,7 @@ export function UserForm({
   lockRole = false,
   backLabel = 'Back to Users',
   title = 'Add / Edit User',
-  subtitle = 'Fill in user details and assign a role',
+  subtitle = 'User details and role',
   onCancel,
   onSave,
 }: UserFormProps) {

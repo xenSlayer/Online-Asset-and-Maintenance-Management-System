@@ -53,7 +53,7 @@ export function TechnicianAvailability({
         to="/technicians"
         className="mt-4 block w-full rounded-lg py-2 text-center text-sm text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-800"
       >
-        Manage Technicians →
+        View technicians
       </Link>
     </div>
   );

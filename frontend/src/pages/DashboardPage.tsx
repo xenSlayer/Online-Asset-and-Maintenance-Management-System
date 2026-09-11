@@ -9,7 +9,7 @@ import { getCurrentUser } from '../utils/auth';
 
 const roleLabels: Record<string, string> = {
   Admin: 'Administrator',
-  Staff: 'Staff User',
+  Staff: 'Staff',
   Technician: 'Technician',
 };
 
@@ -23,7 +23,7 @@ export function DashboardPage() {
       <div>
         <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
         <p className="mt-0.5 text-sm text-slate-500">
-          Welcome back{user ? `, ${user.name}` : ''} · {roleLabel} view
+          {user ? `${user.name} · ${roleLabel}` : roleLabel}
         </p>
       </div>
 

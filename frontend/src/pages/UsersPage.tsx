@@ -140,7 +140,7 @@ export function UsersPage() {
                 User Management
               </h1>
               <p className="mt-0.5 text-sm text-slate-500">
-                Manage system users and their access roles
+                System users
               </p>
             </div>
             <button

@@ -82,18 +82,18 @@ function getTabCounts(requests: MaintenanceRequest[], role: UserRole) {
 function getPageCopy(role: UserRole) {
   if (role === 'Technician') {
     return {
-      subtitle: 'Start and complete your assigned maintenance tasks',
+      subtitle: 'Assigned tasks',
     };
   }
 
   if (role === 'Staff') {
     return {
-      subtitle: 'Submit and track your maintenance requests',
+      subtitle: 'Your requests',
     };
   }
 
   return {
-    subtitle: 'Assign technicians and monitor request status',
+    subtitle: 'Assign and track requests',
   };
 }
 

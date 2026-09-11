@@ -1,3 +1,4 @@
+import { Wrench } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { DashboardRecentRequest } from '../../types/dashboard';
 import { Badge } from '../ui';
@@ -57,7 +58,7 @@ export function RecentRequests({ requests }: RecentRequestsProps) {
           to="/maintenance-requests"
           className="text-sm text-slate-500 transition-colors hover:text-slate-800"
         >
-          View all →
+          View all
         </Link>
       </div>
 
@@ -79,13 +80,13 @@ export function RecentRequests({ requests }: RecentRequestsProps) {
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <div
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
                     style={{
                       backgroundColor: statusStyle.iconBg,
                       color: statusStyle.iconColor,
                     }}
                   >
-                    🔧
+                    <Wrench size={14} />
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-slate-800">

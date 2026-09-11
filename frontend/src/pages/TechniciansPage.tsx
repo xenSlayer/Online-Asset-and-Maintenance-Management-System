@@ -157,7 +157,7 @@ export function TechniciansPage() {
                 Technician Management
               </h1>
               <p className="mt-0.5 text-sm text-slate-500">
-                View technician profiles and manage assignments
+                Technician profiles
               </p>
             </div>
             <button

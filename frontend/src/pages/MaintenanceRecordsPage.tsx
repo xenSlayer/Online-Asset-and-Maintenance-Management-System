@@ -75,7 +75,7 @@ export function MaintenanceRecordsPage() {
           Maintenance Records
         </h1>
         <p className="mt-0.5 text-sm text-slate-500">
-          Complete history of all maintenance activities
+          Completed maintenance work
         </p>
       </div>
 

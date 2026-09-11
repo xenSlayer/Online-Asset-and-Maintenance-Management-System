@@ -35,7 +35,7 @@ export function AssetDonutChart({ segments }: AssetDonutChartProps) {
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-5">
         <h3 className="text-sm font-bold text-slate-800">Asset Status</h3>
-        <p className="text-xs text-slate-400">Current breakdown</p>
+        <p className="text-xs text-slate-400">By status</p>
       </div>
 
       <div className="flex items-center gap-6">

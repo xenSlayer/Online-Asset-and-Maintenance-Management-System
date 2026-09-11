@@ -157,7 +157,7 @@ export function AssetsPage() {
                 Asset Management
               </h1>
               <p className="mt-0.5 text-sm text-slate-500">
-                Track and manage all organisational assets
+                Registered assets
               </p>
             </div>
             <button
