@@ -1,6 +1,7 @@
 import prisma from '../config/database';
 import { Prisma } from '@prisma/client';
 import type { AuthPayload } from '../middleware/authMiddleware';
+import { syncAssetMaintenanceStatus } from './assetService';
 import {
   formatAssetId,
   formatDisplayDate,
@@ -145,18 +146,24 @@ export async function createMaintenanceRequest(
     throw new MaintenanceRequestError('Asset not found', 404);
   }
 
-  const request = await prisma.maintenanceRequest.create({
-    data: {
-      description: input.description.trim(),
-      priority: input.priority,
-      status: 'Pending',
-      requestDate: input.requestDate
-        ? new Date(input.requestDate)
-        : new Date(),
-      userId: auth.userId,
-      assetId,
-    },
-    include: requestInclude,
+  const request = await prisma.$transaction(async (tx) => {
+    const created = await tx.maintenanceRequest.create({
+      data: {
+        description: input.description.trim(),
+        priority: input.priority,
+        status: 'Pending',
+        requestDate: input.requestDate
+          ? new Date(input.requestDate)
+          : new Date(),
+        userId: auth.userId,
+        assetId,
+      },
+      include: requestInclude,
+    });
+
+    await syncAssetMaintenanceStatus(assetId, tx);
+
+    return created;
   });
 
   return formatRequest(request);
@@ -234,12 +241,7 @@ export async function assignMaintenanceRequest(
         },
       });
 
-      if (existing.status === 'In Progress') {
-        await tx.asset.update({
-          where: { id: existing.assetId },
-          data: { status: 'Operational' },
-        });
-      }
+      await syncAssetMaintenanceStatus(existing.assetId, tx);
     });
 
     const request = await prisma.maintenanceRequest.findUniqueOrThrow({
@@ -305,7 +307,10 @@ export async function deleteMaintenanceRequest(id: number, auth: AuthPayload) {
     );
   }
 
-  await prisma.maintenanceRequest.delete({ where: { id } });
+  await prisma.$transaction(async (tx) => {
+    await tx.maintenanceRequest.delete({ where: { id } });
+    await syncAssetMaintenanceStatus(existing.assetId, tx);
+  });
 
   return { id: formatRequestId(id) };
 }
@@ -347,10 +352,7 @@ export async function updateMaintenanceRequestProgress(
       data: { status: 'In Progress' },
     });
 
-    await tx.asset.update({
-      where: { id: existing.assetId },
-      data: { status: 'Under Maintenance' },
-    });
+    await syncAssetMaintenanceStatus(existing.assetId, tx);
   });
 
   const request = await prisma.maintenanceRequest.findUniqueOrThrow({
@@ -426,10 +428,7 @@ export async function completeMaintenanceRequest(
       },
     });
 
-    await tx.asset.update({
-      where: { id: existing.assetId },
-      data: { status: 'Operational' },
-    });
+    await syncAssetMaintenanceStatus(existing.assetId, tx);
   });
 
   const request = await prisma.maintenanceRequest.findUniqueOrThrow({

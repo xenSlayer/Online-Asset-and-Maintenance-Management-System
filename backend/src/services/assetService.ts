@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import prisma from '../config/database';
 
 export class AssetError extends Error {
@@ -8,6 +9,8 @@ export class AssetError extends Error {
     this.statusCode = statusCode;
   }
 }
+
+type DbClient = Prisma.TransactionClient | typeof prisma;
 
 function formatAssetId(id: number) {
   return `AST-${String(id).padStart(3, '0')}`;
@@ -41,14 +44,17 @@ type AssetRecord = {
   assignedTo: string | null;
 };
 
-function formatAssetSummary(asset: AssetRecord) {
+function formatAssetSummary(
+  asset: AssetRecord,
+  hasActiveMaintenance = false,
+) {
   return {
     id: formatAssetId(asset.id),
     name: asset.assetName,
     category: asset.category,
     serialNo: asset.serialNo ?? '',
     location: asset.location,
-    status: asset.status,
+    status: hasActiveMaintenance ? 'Under Maintenance' : asset.status,
     assignedTo: asset.assignedTo ?? 'Unassigned',
     description: asset.description ?? '',
     purchaseDate: formatPurchaseDate(asset.purchaseDate),
@@ -80,16 +86,64 @@ async function getMaintenanceHistory(assetId: number) {
   }));
 }
 
+/** Keep asset status in sync with open maintenance requests. */
+export async function syncAssetMaintenanceStatus(
+  assetId: number,
+  client: DbClient = prisma,
+) {
+  const activeCount = await client.maintenanceRequest.count({
+    where: {
+      assetId,
+      status: { not: 'Completed' },
+    },
+  });
+
+  if (activeCount > 0) {
+    await client.asset.update({
+      where: { id: assetId },
+      data: { status: 'Under Maintenance' },
+    });
+    return;
+  }
+
+  const asset = await client.asset.findUnique({ where: { id: assetId } });
+
+  if (asset?.status === 'Under Maintenance') {
+    await client.asset.update({
+      where: { id: assetId },
+      data: { status: 'Operational' },
+    });
+  }
+}
+
 export async function listAssets() {
   const assets = await prisma.asset.findMany({
     orderBy: { id: 'asc' },
+    include: {
+      maintenanceRequests: {
+        where: { status: { not: 'Completed' } },
+        select: { id: true },
+        take: 1,
+      },
+    },
   });
 
-  return assets.map(formatAssetSummary);
+  return assets.map((asset) =>
+    formatAssetSummary(asset, asset.maintenanceRequests.length > 0),
+  );
 }
 
 export async function getAssetById(id: number) {
-  const asset = await prisma.asset.findUnique({ where: { id } });
+  const asset = await prisma.asset.findUnique({
+    where: { id },
+    include: {
+      maintenanceRequests: {
+        where: { status: { not: 'Completed' } },
+        select: { id: true },
+        take: 1,
+      },
+    },
+  });
 
   if (!asset) {
     throw new AssetError('Asset not found', 404);
@@ -98,7 +152,7 @@ export async function getAssetById(id: number) {
   const maintenanceHistory = await getMaintenanceHistory(id);
 
   return {
-    ...formatAssetSummary(asset),
+    ...formatAssetSummary(asset, asset.maintenanceRequests.length > 0),
     maintenanceHistory,
   };
 }
