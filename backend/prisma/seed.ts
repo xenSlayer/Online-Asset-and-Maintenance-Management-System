@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 const kiranUser = {
-  name: 'Kiran Paudel',
+  name: 'Admin',
   email: 'admin@oamanagement.com',
   password: '123',
   role: 'ADMIN',
